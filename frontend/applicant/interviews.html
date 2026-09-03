@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Scheduled Interviews — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="applications.html">My Applications</a></li>
+          <li><a href="interviews.html" class="active">Interviews</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html">📊 Overview Dashboard</a></li>
+        <li><a href="profile.html">👤 Profile & Resume</a></li>
+        <li><a href="applications.html">📝 My Applications</a></li>
+        <li><a href="interviews.html" class="active">📅 My Interviews</a></li>
+        <li><a href="notifications.html">🔔 Notifications</a></li>
+        <li><a href="../jobs.html">🔍 Search Jobs</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <div class="card mb-3">
+        <div class="card-header">
+          <div>
+            <h2>My Scheduled Interviews</h2>
+            <p class="text-muted" style="font-size: 0.9rem;">View upcoming technical rounds, behavioral screenings, and video meeting links</p>
+          </div>
+        </div>
+
+        <div id="interviews-list-container">
+          <p class="text-center text-muted" style="padding: 2.5rem;">Loading scheduled interviews...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/applicant.js"></script>
+</body>
+</html>

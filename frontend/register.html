@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create an Account — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="jobs.html">Find Jobs</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="register.html" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <main class="auth-wrapper" style="max-width: 680px; margin: 2.5rem auto;">
+    <div class="auth-card">
+      <div class="text-center mb-3">
+        <h2 style="font-size: 1.85rem;">Create Your Account</h2>
+        <p class="text-muted" style="font-size: 0.95rem;">Join RecruitHub as a Job Applicant or Company Recruiter</p>
+      </div>
+
+      <!-- Role Selection Tabs -->
+      <div class="auth-tabs">
+        <div id="tab-applicant" class="auth-tab active">
+          👨‍💻 Job Applicant
+        </div>
+        <div id="tab-recruiter" class="auth-tab">
+          🏢 Company Recruiter
+        </div>
+      </div>
+
+      <!-- Applicant Registration Form -->
+      <form id="form-applicant">
+        <h4 class="mb-2" style="color: var(--primary);">1. Basic Credentials</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-fullName">Full Name *</label>
+            <input type="text" id="app-fullName" name="fullName" class="form-control" placeholder="e.g. John Doe" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-email">Email Address *</label>
+            <input type="email" id="app-email" name="email" class="form-control" placeholder="john@example.com" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-password">Password *</label>
+            <input type="password" id="app-password" name="password" class="form-control" placeholder="At least 4 characters" required minlength="4">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-phone">Phone Number</label>
+            <input type="tel" id="app-phone" name="phone" class="form-control" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-dob">Date of Birth</label>
+            <input type="date" id="app-dob" name="dob" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-gender">Gender</label>
+            <select id="app-gender" name="gender" class="form-control">
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 class="mb-2 mt-3" style="color: var(--primary);">2. Location & Education</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-city">City</label>
+            <input type="text" id="app-city" name="city" class="form-control" placeholder="e.g. San Francisco">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-country">Country</label>
+            <input type="text" id="app-country" name="country" class="form-control" placeholder="e.g. United States">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-education">Highest Education / Degree</label>
+            <input type="text" id="app-education" name="education" class="form-control" placeholder="e.g. B.S. in Computer Science">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-university">University / College</label>
+            <input type="text" id="app-university" name="university" class="form-control" placeholder="e.g. Stanford University">
+          </div>
+          <div class="form-group" style="flex: 0 0 120px;">
+            <label class="form-label" for="app-gradYear">Grad Year</label>
+            <input type="number" id="app-gradYear" name="graduationYear" class="form-control" placeholder="2025" min="1970" max="2035">
+          </div>
+        </div>
+
+        <h4 class="mb-2 mt-3" style="color: var(--primary);">3. Professional Experience & Links</h4>
+        <div class="form-group">
+          <label class="form-label" for="app-skills">Key Skills (comma separated) *</label>
+          <input type="text" id="app-skills" name="skills" class="form-control" placeholder="Java, Spring Boot, MySQL, REST APIs, JavaScript" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-exp">Experience (Years)</label>
+            <input type="number" id="app-exp" name="experienceYears" class="form-control" placeholder="0" min="0" max="50">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-salary">Expected Salary</label>
+            <input type="text" id="app-salary" name="expectedSalary" class="form-control" placeholder="e.g. $85,000 / yr">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="app-linkedin">LinkedIn URL</label>
+            <input type="url" id="app-linkedin" name="linkedinUrl" class="form-control" placeholder="https://linkedin.com/in/username">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-github">GitHub URL</label>
+            <input type="url" id="app-github" name="githubUrl" class="form-control" placeholder="https://github.com/username">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-leetcode">LeetCode URL</label>
+            <input type="url" id="app-leetcode" name="leetcodeUrl" class="form-control" placeholder="https://leetcode.com/username">
+          </div>
+        </div>
+
+        <h4 class="mb-2 mt-3" style="color: var(--primary);">4. Resume Upload (PDF)</h4>
+        <div class="form-group">
+          <label class="file-upload-box" for="app-resume">
+            <div style="font-size: 2rem; margin-bottom: 0.4rem;">📄</div>
+            <div id="resume-file-name" class="font-semibold text-primary">Click to Choose PDF Resume File...</div>
+            <div class="text-muted" style="font-size: 0.8rem; margin-top: 0.2rem;">PDF format only (Max 10MB)</div>
+            <input type="file" id="app-resume" name="resume" accept=".pdf,application/pdf">
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">
+          Complete Applicant Registration
+        </button>
+      </form>
+
+      <!-- Recruiter Registration Form -->
+      <form id="form-recruiter" style="display: none;">
+        <h4 class="mb-2" style="color: var(--accent);">Company & Recruiter Details</h4>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="rec-name">Recruiter Full Name *</label>
+            <input type="text" id="rec-name" class="form-control" placeholder="e.g. Sarah Jenkins" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rec-company">Company / Organization *</label>
+            <input type="text" id="rec-company" class="form-control" placeholder="e.g. Apex Cloud Solutions" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="rec-email">Work Email Address *</label>
+            <input type="email" id="rec-email" class="form-control" placeholder="sarah@apexcloud.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rec-password">Password *</label>
+            <input type="password" id="rec-password" class="form-control" placeholder="At least 4 characters" required minlength="4">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="rec-phone">Phone Number</label>
+            <input type="tel" id="rec-phone" class="form-control" placeholder="+1 (555) 301-4455">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rec-country">Country</label>
+            <input type="text" id="rec-country" class="form-control" placeholder="e.g. United States">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="rec-desc">Company Overview / Description</label>
+          <textarea id="rec-desc" class="form-control" rows="3" placeholder="Briefly describe what your company builds and your engineering culture..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-3" style="background: var(--accent); border-color: var(--accent);">
+          Register Recruiter Account
+        </button>
+      </form>
+
+      <div class="text-center mt-3" style="font-size: 0.9rem;">
+        Already registered? <a href="login.html" class="font-semibold">Log In here</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/register.js"></script>
+</body>
+</html>

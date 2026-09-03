@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post a New Job Opening — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="post-job.html" class="active">Post Job</a></li>
+          <li><a href="manage-jobs.html">Manage Jobs</a></li>
+          <li><a href="candidates.html">Candidates</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html">📊 Hiring Overview</a></li>
+        <li><a href="post-job.html" class="active">➕ Post New Job</a></li>
+        <li><a href="manage-jobs.html">📋 Manage Postings</a></li>
+        <li><a href="candidates.html">👥 Candidates & Applicants</a></li>
+        <li><a href="interviews.html">📅 Interviews</a></li>
+        <li><a href="notifications.html">🔔 Alerts & Activity</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Post a New Job Opening</h2>
+            <p class="text-muted" style="font-size: 0.9rem;">Fill out the requirements and details to publish a new vacancy</p>
+          </div>
+        </div>
+
+        <form id="post-job-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="job-title">Job Title *</label>
+              <input type="text" id="job-title" class="form-control" placeholder="e.g. Senior Java Backend Engineer" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="job-company">Company Name *</label>
+              <input type="text" id="job-company" class="form-control" placeholder="e.g. Apex Cloud Solutions" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="job-type">Job Type *</label>
+              <select id="job-type" class="form-control" required>
+                <option value="Full Time">Full Time</option>
+                <option value="Part Time">Part Time</option>
+                <option value="Internship">Internship</option>
+                <option value="Contract">Contract</option>
+                <option value="Remote">Remote</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="job-vacancies">Number of Vacancies</label>
+              <input type="number" id="job-vacancies" class="form-control" value="1" min="1" max="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="job-salary">Salary Range / Compensation</label>
+              <input type="text" id="job-salary" class="form-control" placeholder="e.g. $90,000 - $110,000 / yr">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="job-location">Location / City</label>
+              <input type="text" id="job-location" class="form-control" placeholder="e.g. San Francisco, CA (or Remote)">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="job-country">Country</label>
+              <input type="text" id="job-country" class="form-control" placeholder="e.g. United States">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="job-deadline">Application Deadline</label>
+              <input type="date" id="job-deadline" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="job-experience">Experience Requirement</label>
+              <input type="text" id="job-experience" class="form-control" placeholder="e.g. 1 - 3 Years (or Freshers)">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="job-education">Education / Degree</label>
+              <input type="text" id="job-education" class="form-control" placeholder="e.g. B.S. in Computer Science or equivalent">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="job-skills">Required Skills (comma-separated) *</label>
+            <input type="text" id="job-skills" class="form-control" placeholder="Java, JDBC, MySQL, REST APIs, Git" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="job-description">Job Description & Responsibilities *</label>
+            <textarea id="job-description" class="form-control" rows="6" placeholder="Describe the role responsibilities, tech stack, team culture, and day-to-day work..." required></textarea>
+          </div>
+
+          <div class="flex gap-2 justify-between items-center mt-3">
+            <a href="manage-jobs.html" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-lg">Publish Job Vacancy</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/recruiter.js"></script>
+</body>
+</html>

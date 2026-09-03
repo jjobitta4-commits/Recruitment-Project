@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Applications — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="applications.html" class="active">My Applications</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html">📊 Overview Dashboard</a></li>
+        <li><a href="profile.html">👤 Profile & Resume</a></li>
+        <li><a href="applications.html" class="active">📝 My Applications</a></li>
+        <li><a href="interviews.html">📅 My Interviews</a></li>
+        <li><a href="notifications.html">🔔 Notifications</a></li>
+        <li><a href="../jobs.html">🔍 Search Jobs</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <div class="card mb-3">
+        <div class="card-header">
+          <div>
+            <h2>My Submitted Applications</h2>
+            <p class="text-muted" style="font-size: 0.9rem;">Track hiring stages and recruiter review updates</p>
+          </div>
+          <a href="../jobs.html" class="btn btn-primary btn-sm">+ Apply for More Jobs</a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Location</th>
+                <th>Applied Date</th>
+                <th>Current Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="applications-table-tbody">
+              <tr><td colspan="6" class="text-center text-muted">Loading applications...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Cover Letter Modal -->
+  <div class="modal-overlay" id="cover-letter-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="cl-modal-title">Application Cover Letter</div>
+        <button class="modal-close" onclick="closeModal('cover-letter-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="cl-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('cover-letter-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/applicant.js"></script>
+</body>
+</html>

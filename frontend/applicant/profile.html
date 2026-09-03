@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile & Resume — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="applications.html">My Applications</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html">📊 Overview Dashboard</a></li>
+        <li><a href="profile.html" class="active">👤 Profile & Resume</a></li>
+        <li><a href="applications.html">📝 My Applications</a></li>
+        <li><a href="interviews.html">📅 My Interviews</a></li>
+        <li><a href="notifications.html">🔔 Notifications</a></li>
+        <li><a href="../jobs.html">🔍 Search Jobs</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-content">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h3>Personal Profile & Information</h3>
+          <span class="text-muted" style="font-size: 0.85rem;">Keep your details accurate to attract recruiters</span>
+        </div>
+
+        <form id="applicant-profile-form">
+          <h4 class="mb-2" style="color: var(--primary);">1. Contact Details</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="prof-fullName">Full Name</label>
+              <input type="text" id="prof-fullName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-email">Email (Account ID)</label>
+              <input type="email" id="prof-email" class="form-control" readonly style="background: #f1f5f9;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-phone">Phone</label>
+              <input type="tel" id="prof-phone" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="prof-dob">Date of Birth</label>
+              <input type="date" id="prof-dob" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-gender">Gender</label>
+              <select id="prof-gender" class="form-control">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-city">City</label>
+              <input type="text" id="prof-city" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-country">Country</label>
+              <input type="text" id="prof-country" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prof-address">Residential Address</label>
+            <input type="text" id="prof-address" class="form-control">
+          </div>
+
+          <h4 class="mb-2 mt-3" style="color: var(--primary);">2. Education Background</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="prof-education">Degree / Qualification</label>
+              <input type="text" id="prof-education" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-university">College / Institute</label>
+              <input type="text" id="prof-university" class="form-control">
+            </div>
+            <div class="form-group" style="flex: 0 0 130px;">
+              <label class="form-label" for="prof-gradYear">Graduation Year</label>
+              <input type="number" id="prof-gradYear" class="form-control">
+            </div>
+          </div>
+
+          <h4 class="mb-2 mt-3" style="color: var(--primary);">3. Technical Skills & Experience</h4>
+          <div class="form-group">
+            <label class="form-label" for="prof-skills">Technical Skills (comma-separated)</label>
+            <input type="text" id="prof-skills" class="form-control" placeholder="Java, MySQL, Spring, REST API, HTML5, JavaScript">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="prof-exp">Experience (Years)</label>
+              <input type="number" id="prof-exp" class="form-control" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-salary">Expected Salary / Compensation</label>
+              <input type="text" id="prof-salary" class="form-control" placeholder="e.g. $90,000 / yr">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="prof-linkedin">LinkedIn Profile</label>
+              <input type="url" id="prof-linkedin" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-github">GitHub Profile</label>
+              <input type="url" id="prof-github" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-leetcode">LeetCode / Portfolio</label>
+              <input type="url" id="prof-leetcode" class="form-control">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg mt-3">
+            Save Profile Changes
+          </button>
+        </form>
+      </div>
+
+      <!-- Resume Management Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Verified PDF Resume</h3>
+          <span class="text-muted" style="font-size: 0.85rem;">Used automatically when applying for new jobs</span>
+        </div>
+
+        <div id="current-resume-display" class="mb-3">
+          <!-- Dynamic resume file badge -->
+        </div>
+
+        <form id="applicant-resume-form">
+          <div class="form-group">
+            <label class="form-label">Upload / Replace PDF Resume</label>
+            <input type="file" id="prof-resume-input" class="form-control" accept=".pdf,application/pdf" required>
+          </div>
+          <button type="submit" class="btn btn-secondary">
+            Upload New Resume
+          </button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/applicant.js"></script>
+</body>
+</html>

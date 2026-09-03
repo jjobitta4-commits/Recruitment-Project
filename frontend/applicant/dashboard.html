@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applicant Dashboard — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html" class="active">Dashboard</a></li>
+          <li><a href="applications.html">My Applications</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html" class="active">📊 Overview Dashboard</a></li>
+        <li><a href="profile.html">👤 Profile & Resume</a></li>
+        <li><a href="applications.html">📝 My Applications</a></li>
+        <li><a href="interviews.html">📅 My Interviews</a></li>
+        <li><a href="notifications.html">🔔 Notifications</a></li>
+        <li><a href="../jobs.html">🔍 Search Jobs</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-content">
+      <div class="card mb-3" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #ffffff;">
+        <h2>Welcome Back, <span id="applicant-welcome-name">Applicant</span>! 👋</h2>
+        <p style="color: #bfdbfe; margin-top: 0.25rem;">
+          Track your applications, interview schedules, and profile visibility in real-time.
+        </p>
+      </div>
+
+      <!-- Overview Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📄</div>
+          <div>
+            <div class="stat-val" id="stat-total-apps">0</div>
+            <div class="stat-label">Total Applied</div>
+          </div>
+        </div>
+
+        <div class="stat-card" style="border-left-color: var(--info);">
+          <div class="stat-icon" style="background: var(--info-light); color: var(--info);">⭐</div>
+          <div>
+            <div class="stat-val" id="stat-shortlisted">0</div>
+            <div class="stat-label">Shortlisted</div>
+          </div>
+        </div>
+
+        <div class="stat-card" style="border-left-color: var(--success);">
+          <div class="stat-icon" style="background: var(--success-light); color: var(--success);">🎉</div>
+          <div>
+            <div class="stat-val" id="stat-selected">0</div>
+            <div class="stat-label">Offers / Selected</div>
+          </div>
+        </div>
+
+        <div class="stat-card" style="border-left-color: var(--accent);">
+          <div class="stat-icon" style="background: #e0f2fe; color: var(--accent);">📅</div>
+          <div>
+            <div class="stat-val" id="stat-interviews">0</div>
+            <div class="stat-label">Interviews</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Applications & Activity -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h3>Recent Applications</h3>
+          <a href="/applicant/applications.html" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="recent-applications-tbody">
+              <tr><td colspan="5" class="text-center text-muted">Loading applications...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Notifications -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Alerts & Updates</h3>
+          <a href="notifications.html" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div id="recent-notifications-list">
+          <p class="text-muted text-center" style="padding: 1rem;">Loading notifications...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/applicant.js"></script>
+</body>
+</html>

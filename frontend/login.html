@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="jobs.html">Find Jobs</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="register.html" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <main class="auth-wrapper">
+    <div class="auth-card">
+      <div class="text-center mb-3">
+        <h2 style="font-size: 1.85rem;">Welcome Back</h2>
+        <p class="text-muted" style="font-size: 0.95rem;">Log in to your RecruitHub account to continue</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="name@domain.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
+          Log In
+        </button>
+      </form>
+
+      <div class="text-center mt-3" style="font-size: 0.9rem;">
+        Don't have an account? <a href="register.html" class="font-semibold">Sign Up Free</a>
+      </div>
+
+      <!-- Demo Accounts Box for College Evaluators / Quick Testing -->
+      <div class="demo-box">
+        <strong style="color: var(--primary-dark);">⚡ 1-Click Quick Demo Accounts:</strong>
+        <p style="color: #475569; margin: 0.25rem 0 0.5rem 0; font-size: 0.8rem;">
+          Click any preset below to automatically fill credentials from sample database:
+        </p>
+        <div class="demo-btn-group">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemoAccount('applicant@demo.com', 'pass123')">
+            👨‍💻 Applicant (John Doe)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemoAccount('alex@demo.com', 'pass123')">
+            👩‍💻 Applicant (Alex Smith)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemoAccount('recruiter@demo.com', 'pass123')">
+            🏢 Recruiter (Apex Cloud)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemoAccount('hr@techcorp.com', 'pass123')">
+            🌐 Recruiter (TechCorp)
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

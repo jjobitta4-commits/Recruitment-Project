@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Applications & Screening — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="post-job.html">Post Job</a></li>
+          <li><a href="manage-jobs.html">Manage Jobs</a></li>
+          <li><a href="candidates.html" class="active">Candidates</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html">📊 Hiring Overview</a></li>
+        <li><a href="post-job.html">➕ Post New Job</a></li>
+        <li><a href="manage-jobs.html">📋 Manage Postings</a></li>
+        <li><a href="candidates.html" class="active">👥 Candidates & Applicants</a></li>
+        <li><a href="interviews.html">📅 Interviews</a></li>
+        <li><a href="notifications.html">🔔 Alerts & Activity</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <div class="card mb-3">
+        <div class="card-header">
+          <div>
+            <h2>Candidate Screening & Review</h2>
+            <p class="text-muted" style="font-size: 0.9rem;">Review submitted applicant profiles, change review statuses, and schedule interviews</p>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="card mb-3" style="background: var(--surface-alt); padding: 1rem;">
+          <div class="form-row" style="grid-template-columns: 2fr 1fr;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Filter by Job Posting</label>
+              <select id="candidate-filter-job" class="form-control">
+                <option value="">All Jobs</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Filter by Status</label>
+              <select id="candidate-filter-status" class="form-control">
+                <option value="">All Statuses</option>
+                <option value="Applied">Applied</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Shortlisted">Shortlisted</option>
+                <option value="Interview Scheduled">Interview Scheduled</option>
+                <option value="Selected">Selected</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Candidate Name & Contact</th>
+                <th>Target Job</th>
+                <th>Experience & Skills</th>
+                <th>Applied Date</th>
+                <th>Application Status</th>
+                <th>Resume</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="candidates-table-tbody">
+              <tr><td colspan="7" class="text-center text-muted">Loading candidate applications...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal 1: Candidate Profile Modal -->
+  <div class="modal-overlay" id="candidate-profile-modal">
+    <div class="modal-box" style="max-width: 700px;">
+      <div class="modal-header">
+        <div class="modal-title" id="cand-modal-title">Candidate Profile</div>
+        <button class="modal-close" onclick="closeModal('candidate-profile-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="cand-modal-content">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('candidate-profile-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Schedule Interview Modal -->
+  <div class="modal-overlay" id="schedule-interview-modal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title" id="sched-modal-title">Schedule Candidate Interview</div>
+        <button class="modal-close" onclick="closeModal('schedule-interview-modal')">&times;</button>
+      </div>
+      <form id="schedule-interview-form">
+        <div class="modal-body">
+          <input type="hidden" id="sched-app-id">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="sched-date">Interview Date *</label>
+              <input type="date" id="sched-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sched-time">Time & Timezone *</label>
+              <input type="text" id="sched-time" class="form-control" placeholder="e.g. 14:00 EST / 11:00 AM PST" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="sched-type">Interview Format</label>
+              <select id="sched-type" class="form-control">
+                <option value="Online">Online Video Meeting</option>
+                <option value="Offline">Offline / In-Person Office</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sched-link">Meeting Link / Location</label>
+              <input type="text" id="sched-link" class="form-control" placeholder="https://meet.google.com/xyz-uvwx-rst">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="sched-notes">Interview Agenda & Candidate Instructions</label>
+            <textarea id="sched-notes" class="form-control" rows="3" placeholder="e.g. Technical coding round covering Java OOP, SQL problem solving, and system design..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('schedule-interview-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Schedule Interview</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/recruiter.js"></script>
+</body>
+</html>
