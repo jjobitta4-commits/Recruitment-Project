@@ -1,175 +1,223 @@
 package com.recruitment.model;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Model class representing a candidate's Job Application.
+ * Enterprise model representing a Candidate's Job Application.
+ * Aligns with the normalized `applications` MySQL schema, integrates with
+ * the 5-factor Smart Job Matching Algorithm and Candidate Ranking System.
  */
 public class Application {
     private int applicationId;
-    private int applicantId;
     private int jobId;
-    private String resumePath;
+    private int candidateId;
+    private Integer resumeId;
     private String coverLetter;
-    private String status; // Applied, Under Review, Shortlisted, Interview Scheduled, Selected, Rejected
-    private Timestamp appliedDate;
-    private Timestamp updatedDate;
+    private int matchScore; // 0 - 100 percentage calculated via 5-factor formula
+    private String status;  // Applied, Under_Review, Shortlisted, Interview_Scheduled, Selected, Rejected
+    private Timestamp appliedAt;
+    private Timestamp updatedAt;
 
-    // Joined fields for display
-    private String applicantName;
-    private String applicantEmail;
-    private String applicantPhone;
-    private String applicantSkills;
-    private int applicantExperience;
-    private String applicantEducation;
+    // Joined Candidate Details
+    private String candidateName;
+    private String candidateEmail;
+    private String candidatePhone;
+    private String candidateCity;
+    private String candidateCountry;
+    private String candidateEducation;
+    private int candidateExperienceYears;
+    private String candidateSkills;
+    private int profileCompletion;
+
+    // Joined Job & Company Details
     private String jobTitle;
-    private String company;
+    private String companyName;
     private String jobLocation;
     private String jobType;
+    private String salaryRange;
+    private String jobStatus;
+    private int recruiterId;
+
+    // Resume Details
+    private String resumeFileName;
+    private String resumePath;
+
+    // Core Innovation 1 & 3: Match & Ranking Analytics
+    private String matchLevel; // EXCELLENT, STRONG, MODERATE, LOW
+    private int skillScore;
+    private int experienceScore;
+    private int educationScore;
+    private int projectScore;
+    private int assessmentScore;
+    private List<String> matchedSkills = new ArrayList<>();
+    private List<String> missingSkills = new ArrayList<>();
+    private List<String> missingMandatorySkills = new ArrayList<>();
+    private List<String> missingPreferredSkills = new ArrayList<>();
+    private boolean mandatoryPrerequisitesMet = true;
+
+    // Candidate Ranking Fields
+    private int rank; // 1-based ranking position for a job opening
+    private String rankingInsight; // e.g. "🏆 Top Match (84%) • 5 Yrs Exp • All Prerequisites Met"
 
     public Application() {}
 
-    public int getApplicationId() {
-        return applicationId;
-    }
+    // Primary Getters & Setters
+    public int getApplicationId() { return applicationId; }
+    public void setApplicationId(int applicationId) { this.applicationId = applicationId; }
 
-    public void setApplicationId(int applicationId) {
-        this.applicationId = applicationId;
-    }
+    public int getJobId() { return jobId; }
+    public void setJobId(int jobId) { this.jobId = jobId; }
 
-    public int getApplicantId() {
-        return applicantId;
-    }
+    public int getCandidateId() { return candidateId; }
+    public void setCandidateId(int candidateId) { this.candidateId = candidateId; }
 
-    public void setApplicantId(int applicantId) {
-        this.applicantId = applicantId;
-    }
+    public Integer getResumeId() { return resumeId; }
+    public void setResumeId(Integer resumeId) { this.resumeId = resumeId; }
 
-    public int getJobId() {
-        return jobId;
-    }
+    public String getCoverLetter() { return coverLetter; }
+    public void setCoverLetter(String coverLetter) { this.coverLetter = coverLetter; }
 
-    public void setJobId(int jobId) {
-        this.jobId = jobId;
-    }
+    public int getMatchScore() { return matchScore; }
+    public void setMatchScore(int matchScore) { this.matchScore = matchScore; }
 
-    public String getResumePath() {
-        return resumePath;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setResumePath(String resumePath) {
-        this.resumePath = resumePath;
-    }
+    public Timestamp getAppliedAt() { return appliedAt; }
+    public void setAppliedAt(Timestamp appliedAt) { this.appliedAt = appliedAt; }
 
-    public String getCoverLetter() {
-        return coverLetter;
-    }
+    public Timestamp getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setCoverLetter(String coverLetter) {
-        this.coverLetter = coverLetter;
-    }
+    // Joined Candidate Getters & Setters
+    public String getCandidateName() { return candidateName; }
+    public void setCandidateName(String candidateName) { this.candidateName = candidateName; }
 
-    public String getStatus() {
-        return status;
-    }
+    public String getCandidateEmail() { return candidateEmail; }
+    public void setCandidateEmail(String candidateEmail) { this.candidateEmail = candidateEmail; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public String getCandidatePhone() { return candidatePhone; }
+    public void setCandidatePhone(String candidatePhone) { this.candidatePhone = candidatePhone; }
 
-    public Timestamp getAppliedDate() {
-        return appliedDate;
-    }
+    public String getCandidateCity() { return candidateCity; }
+    public void setCandidateCity(String candidateCity) { this.candidateCity = candidateCity; }
 
-    public void setAppliedDate(Timestamp appliedDate) {
-        this.appliedDate = appliedDate;
-    }
+    public String getCandidateCountry() { return candidateCountry; }
+    public void setCandidateCountry(String candidateCountry) { this.candidateCountry = candidateCountry; }
 
-    public Timestamp getUpdatedDate() {
-        return updatedDate;
-    }
+    public String getCandidateEducation() { return candidateEducation; }
+    public void setCandidateEducation(String candidateEducation) { this.candidateEducation = candidateEducation; }
 
-    public void setUpdatedDate(Timestamp updatedDate) {
-        this.updatedDate = updatedDate;
-    }
+    public int getCandidateExperienceYears() { return candidateExperienceYears; }
+    public void setCandidateExperienceYears(int candidateExperienceYears) { this.candidateExperienceYears = candidateExperienceYears; }
 
-    public String getApplicantName() {
-        return applicantName;
-    }
+    public String getCandidateSkills() { return candidateSkills; }
+    public void setCandidateSkills(String candidateSkills) { this.candidateSkills = candidateSkills; }
 
-    public void setApplicantName(String applicantName) {
-        this.applicantName = applicantName;
-    }
+    public int getProfileCompletion() { return profileCompletion; }
+    public void setProfileCompletion(int profileCompletion) { this.profileCompletion = profileCompletion; }
 
-    public String getApplicantEmail() {
-        return applicantEmail;
-    }
+    // Joined Job & Company Getters & Setters
+    public String getJobTitle() { return jobTitle; }
+    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
 
-    public void setApplicantEmail(String applicantEmail) {
-        this.applicantEmail = applicantEmail;
-    }
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
 
-    public String getApplicantPhone() {
-        return applicantPhone;
-    }
+    public String getJobLocation() { return jobLocation; }
+    public void setJobLocation(String jobLocation) { this.jobLocation = jobLocation; }
 
-    public void setApplicantPhone(String applicantPhone) {
-        this.applicantPhone = applicantPhone;
-    }
+    public String getJobType() { return jobType; }
+    public void setJobType(String jobType) { this.jobType = jobType; }
 
-    public String getApplicantSkills() {
-        return applicantSkills;
-    }
+    public String getSalaryRange() { return salaryRange; }
+    public void setSalaryRange(String salaryRange) { this.salaryRange = salaryRange; }
 
-    public void setApplicantSkills(String applicantSkills) {
-        this.applicantSkills = applicantSkills;
-    }
+    public String getJobStatus() { return jobStatus; }
+    public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
 
-    public int getApplicantExperience() {
-        return applicantExperience;
-    }
+    public int getRecruiterId() { return recruiterId; }
+    public void setRecruiterId(int recruiterId) { this.recruiterId = recruiterId; }
 
-    public void setApplicantExperience(int applicantExperience) {
-        this.applicantExperience = applicantExperience;
-    }
+    // Resume Getters & Setters
+    public String getResumeFileName() { return resumeFileName; }
+    public void setResumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; }
 
-    public String getApplicantEducation() {
-        return applicantEducation;
-    }
+    public String getResumePath() { return resumePath != null ? resumePath : resumeFileName; }
+    public void setResumePath(String resumePath) { this.resumePath = resumePath; }
 
-    public void setApplicantEducation(String applicantEducation) {
-        this.applicantEducation = applicantEducation;
-    }
+    // Innovation 1 & 3 Analytics Getters & Setters
+    public String getMatchLevel() { return matchLevel; }
+    public void setMatchLevel(String matchLevel) { this.matchLevel = matchLevel; }
 
-    public String getJobTitle() {
-        return jobTitle;
-    }
+    public int getSkillScore() { return skillScore; }
+    public void setSkillScore(int skillScore) { this.skillScore = skillScore; }
 
-    public void setJobTitle(String jobTitle) {
-        this.jobTitle = jobTitle;
-    }
+    public int getExperienceScore() { return experienceScore; }
+    public void setExperienceScore(int experienceScore) { this.experienceScore = experienceScore; }
 
-    public String getCompany() {
-        return company;
-    }
+    public int getEducationScore() { return educationScore; }
+    public void setEducationScore(int educationScore) { this.educationScore = educationScore; }
 
-    public void setCompany(String company) {
-        this.company = company;
-    }
+    public int getProjectScore() { return projectScore; }
+    public void setProjectScore(int projectScore) { this.projectScore = projectScore; }
 
-    public String getJobLocation() {
-        return jobLocation;
-    }
+    public int getAssessmentScore() { return assessmentScore; }
+    public void setAssessmentScore(int assessmentScore) { this.assessmentScore = assessmentScore; }
 
-    public void setJobLocation(String jobLocation) {
-        this.jobLocation = jobLocation;
-    }
+    public List<String> getMatchedSkills() { return matchedSkills; }
+    public void setMatchedSkills(List<String> matchedSkills) { this.matchedSkills = matchedSkills; }
 
-    public String getJobType() {
-        return jobType;
-    }
+    public List<String> getMissingSkills() { return missingSkills; }
+    public void setMissingSkills(List<String> missingSkills) { this.missingSkills = missingSkills; }
 
-    public void setJobType(String jobType) {
-        this.jobType = jobType;
-    }
+    public List<String> getMissingMandatorySkills() { return missingMandatorySkills; }
+    public void setMissingMandatorySkills(List<String> missingMandatorySkills) { this.missingMandatorySkills = missingMandatorySkills; }
+
+    public List<String> getMissingPreferredSkills() { return missingPreferredSkills; }
+    public void setMissingPreferredSkills(List<String> missingPreferredSkills) { this.missingPreferredSkills = missingPreferredSkills; }
+
+    public boolean isMandatoryPrerequisitesMet() { return mandatoryPrerequisitesMet; }
+    public void setMandatoryPrerequisitesMet(boolean mandatoryPrerequisitesMet) { this.mandatoryPrerequisitesMet = mandatoryPrerequisitesMet; }
+
+    public int getRank() { return rank; }
+    public void setRank(int rank) { this.rank = rank; }
+
+    public String getRankingInsight() { return rankingInsight; }
+    public void setRankingInsight(String rankingInsight) { this.rankingInsight = rankingInsight; }
+
+    // ==========================================
+    // Backward Compatibility Aliases for Legacy Code
+    // ==========================================
+    public int getApplicantId() { return candidateId; }
+    public void setApplicantId(int applicantId) { this.candidateId = applicantId; }
+
+    public String getApplicantName() { return candidateName; }
+    public void setApplicantName(String applicantName) { this.candidateName = applicantName; }
+
+    public String getApplicantEmail() { return candidateEmail; }
+    public void setApplicantEmail(String applicantEmail) { this.candidateEmail = applicantEmail; }
+
+    public String getApplicantPhone() { return candidatePhone; }
+    public void setApplicantPhone(String applicantPhone) { this.candidatePhone = applicantPhone; }
+
+    public String getApplicantSkills() { return candidateSkills; }
+    public void setApplicantSkills(String applicantSkills) { this.candidateSkills = applicantSkills; }
+
+    public int getApplicantExperience() { return candidateExperienceYears; }
+    public void setApplicantExperience(int applicantExperience) { this.candidateExperienceYears = applicantExperience; }
+
+    public String getApplicantEducation() { return candidateEducation; }
+    public void setApplicantEducation(String applicantEducation) { this.candidateEducation = applicantEducation; }
+
+    public String getCompany() { return companyName; }
+    public void setCompany(String company) { this.companyName = company; }
+
+    public Timestamp getAppliedDate() { return appliedAt; }
+    public void setAppliedDate(Timestamp appliedDate) { this.appliedAt = appliedDate; }
+
+    public Timestamp getUpdatedDate() { return updatedAt; }
+    public void setUpdatedDate(Timestamp updatedDate) { this.updatedAt = updatedDate; }
 }

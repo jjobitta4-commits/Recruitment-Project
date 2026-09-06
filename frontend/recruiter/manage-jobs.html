@@ -27,7 +27,7 @@
           <li><a href="candidates.html">Candidates</a></li>
         </ul>
         <div class="nav-actions">
-          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <span class="user-greeting" id="recruiter-navbar-name">Recruiter Portal</span>
           <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
         </div>
       </div>
@@ -51,7 +51,7 @@
         <div class="card-header">
           <div>
             <h2>Manage Your Job Postings</h2>
-            <p class="text-muted" style="font-size: 0.9rem;">Review applicant counts, toggle active/closed status, edit or remove openings</p>
+            <p class="text-muted" style="font-size: 0.9rem;">Review applicant counts, approval moderation status, toggle active/closed, or edit requirements</p>
           </div>
           <a href="post-job.html" class="btn btn-primary btn-sm">+ Post New Job</a>
         </div>
@@ -60,22 +60,38 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Job Title & Company</th>
-                <th>Type</th>
-                <th>Location</th>
+                <th>Job Title &amp; Company</th>
+                <th>Type &amp; Exp</th>
                 <th>Applications</th>
+                <th>Approval Status</th>
+                <th>Listing Status</th>
                 <th>Posted Date</th>
-                <th>Status (Click to toggle)</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="manage-jobs-tbody">
-              <tr><td colspan="7" class="text-center text-muted">Loading your job postings...</td></tr>
+              <tr><td colspan="7" class="text-center text-muted">Loading your job openings...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- View Job Details Modal -->
+  <div class="modal-overlay" id="view-job-modal">
+    <div class="modal-box" style="max-width: 650px;">
+      <div class="modal-header">
+        <div class="modal-title" id="view-job-title">Job Opening Details</div>
+        <button class="modal-close" onclick="closeModal('view-job-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="view-job-body">
+        <!-- Injected via recruiter.js -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('view-job-modal')">Close</button>
+      </div>
+    </div>
   </div>
 
   <!-- Edit Job Modal -->
@@ -130,38 +146,28 @@
               <input type="text" id="edit-job-location" class="form-control">
             </div>
             <div class="form-group">
-              <label class="form-label" for="edit-job-country">Country</label>
-              <input type="text" id="edit-job-country" class="form-control">
-            </div>
-            <div class="form-group">
               <label class="form-label" for="edit-job-salary">Salary Range</label>
               <input type="text" id="edit-job-salary" class="form-control">
             </div>
-          </div>
-
-          <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="edit-job-experience">Experience</label>
-              <input type="text" id="edit-job-experience" class="form-control">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="edit-job-education">Education</label>
-              <input type="text" id="edit-job-education" class="form-control">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="edit-job-deadline">Deadline</label>
-              <input type="date" id="edit-job-deadline" class="form-control">
+              <label class="form-label" for="edit-job-experience">Min Experience (Years)</label>
+              <input type="number" id="edit-job-experience" class="form-control" min="0">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="edit-job-skills">Skills Required</label>
-            <input type="text" id="edit-job-skills" class="form-control" required>
+            <label class="form-label" for="edit-job-education">Education</label>
+            <input type="text" id="edit-job-education" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-job-deadline">Application Deadline</label>
+            <input type="date" id="edit-job-deadline" class="form-control">
           </div>
 
           <div class="form-group">
             <label class="form-label" for="edit-job-description">Description</label>
-            <textarea id="edit-job-description" class="form-control" rows="5" required></textarea>
+            <textarea id="edit-job-description" class="form-control" rows="4" required></textarea>
           </div>
         </div>
 

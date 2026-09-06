@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Smart Recruitment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge" style="background: #8b5cf6;">A</div>
+          <span>SmartRecruit <small style="font-size: 0.75rem; color: #a78bfa; font-weight: 600;">[ADMIN]</small></span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="dashboard.html" class="active">Overview</a></li>
+          <li><a href="jobs.html">Job Moderation</a></li>
+          <li><a href="../jobs.html">View Vacancies</a></li>
+        </ul>
+        <div class="nav-actions">
+          <span class="user-greeting" id="admin-user-greeting">System Admin</span>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Log Out</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <main class="container py-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4" style="flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem;">Platform Administration</h1>
+        <p class="text-muted">System-wide monitoring, security audit trails, and infrastructure telemetry.</p>
+      </div>
+      <div class="badge badge-success" id="admin-system-badge" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+        ⚡ Server: UP &bull; MySQL: Connected
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid mb-4">
+      <div class="stat-card">
+        <div class="stat-icon">☕</div>
+        <div>
+          <div class="stat-val" id="stat-uptime">0s</div>
+          <div class="stat-label">Server Uptime</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🗄️</div>
+        <div>
+          <div class="stat-val" id="stat-tables">23</div>
+          <div class="stat-label">Normalized SQL Tables</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div>
+          <div class="stat-val">3 Roles</div>
+          <div class="stat-label">RBAC Hierarchy</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔒</div>
+        <div>
+          <div class="stat-val">SHA-256</div>
+          <div class="stat-label">Password Salted Hash</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Telemetry Box -->
+    <div class="card mb-4">
+      <div class="card-header flex justify-between items-center">
+        <h3>System &amp; Database Health Telemetry</h3>
+        <button class="btn btn-secondary btn-sm" onclick="loadTelemetry()">Refresh</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th style="width: 260px;">Database Name</th>
+              <td id="telemetry-db-name">recruitment_system</td>
+            </tr>
+            <tr>
+              <th>Database Connection Status</th>
+              <td><span class="badge badge-success" id="telemetry-db-status">CONNECTED</span></td>
+            </tr>
+            <tr>
+              <th>Verified Schema Tables</th>
+              <td id="telemetry-tables">23 Tables Active</td>
+            </tr>
+            <tr>
+              <th>Server Architecture</th>
+              <td>Core Java <code>com.sun.net.httpserver.HttpServer</code> (Thread-Pooled)</td>
+            </tr>
+            <tr>
+              <th>Java Runtime Version</th>
+              <td id="telemetry-java-ver">Loading...</td>
+            </tr>
+            <tr>
+              <th>Available JVM Processors</th>
+              <td id="telemetry-cores">Loading...</td>
+            </tr>
+            <tr>
+              <th>Free Memory / Total Memory</th>
+              <td id="telemetry-mem">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Navigation to Portals -->
+    <div class="card">
+      <h3 class="mb-2">Admin Direct Portals</h3>
+      <p class="text-muted mb-3">Jump into any perspective to verify end-to-end recruitment operations:</p>
+      <div class="flex gap-2" style="flex-wrap: wrap;">
+        <a href="jobs.html" class="btn btn-primary btn-sm">📋 Job Vacancy Moderation</a>
+        <a href="../applicant/dashboard.html" class="btn btn-outline btn-sm">👨‍🎓 Candidate Dashboard</a>
+        <a href="../recruiter/dashboard.html" class="btn btn-outline btn-sm">🏢 Recruiter Dashboard</a>
+        <a href="../jobs.html" class="btn btn-outline btn-sm">💼 Job Listings &amp; Search</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer mt-4">
+    <div class="container text-center">
+      <p>&copy; 2026 Smart Recruitment System &bull; Core Java &amp; JDBC Architecture</p>
+    </div>
+  </footer>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Auth.requireAuth('admin');
+      loadTelemetry();
+    });
+
+    async function loadTelemetry() {
+      try {
+        const res = await API.checkHealth();
+        if (res && res.status === 'UP') {
+          document.getElementById('stat-uptime').textContent = res.uptimeSeconds + 's';
+          if (res.database) {
+            document.getElementById('stat-tables').textContent = res.database.tablesCount;
+            document.getElementById('telemetry-tables').textContent = res.database.tablesCount + ' Tables Active';
+            document.getElementById('telemetry-db-status').textContent = res.database.status;
+          }
+          if (res.runtime) {
+            document.getElementById('telemetry-java-ver').textContent = 'Java ' + res.runtime.javaVersion;
+            document.getElementById('telemetry-cores').textContent = res.runtime.availableProcessors + ' Cores';
+            document.getElementById('telemetry-mem').textContent = res.runtime.freeMemoryMB + ' MB / ' + res.runtime.totalMemoryMB + ' MB';
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  </script>
+</body>
+</html>

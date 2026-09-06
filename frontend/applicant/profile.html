@@ -3,31 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Profile & Resume — RecruitHub</title>
+  <title>Candidate Profile &amp; Skill Portfolio — SmartRecruit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .progress-bar-container {
+      background: #e2e8f0;
+      border-radius: 9999px;
+      height: 14px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #2563eb 0%, #10b981 100%);
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.5s ease;
+    }
+    .skill-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      margin: 0.25rem;
+      font-weight: 600;
+    }
+    .skill-tag-pill .remove-btn {
+      color: #ef4444;
+      cursor: pointer;
+      font-weight: 800;
+      margin-left: 0.3rem;
+    }
+    .profile-nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 2rem;
+      overflow-x: auto;
+    }
+    .profile-nav-tab {
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      white-space: nowrap;
+    }
+    .profile-nav-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
 
+  <!-- Navigation -->
   <div id="global-navbar">
     <nav class="navbar">
       <div class="container nav-container">
         <a href="../index.html" class="nav-brand">
-          <div class="brand-badge">R</div>
-          <span>RecruitHub</span>
+          <div class="brand-badge">S</div>
+          <span>SmartRecruit</span>
         </a>
         <ul class="nav-links">
           <li><a href="../index.html">Home</a></li>
           <li><a href="../jobs.html">Find Jobs</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="applications.html">My Applications</a></li>
+          <li><a href="assessments.html">Assessments</a></li>
+          <li><a href="career-path.html">Career Paths</a></li>
           <li><a href="interviews.html">Interviews</a></li>
         </ul>
         <div class="nav-actions">
           <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
-          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm">Log Out</button>
         </div>
       </div>
     </nav>
@@ -38,9 +100,11 @@
     <aside class="dashboard-sidebar">
       <ul class="sidebar-menu">
         <li><a href="dashboard.html">📊 Overview Dashboard</a></li>
-        <li><a href="profile.html" class="active">👤 Profile & Resume</a></li>
+        <li><a href="profile.html" class="active">👤 Profile &amp; Skills</a></li>
         <li><a href="applications.html">📝 My Applications</a></li>
-        <li><a href="interviews.html">📅 My Interviews</a></li>
+        <li><a href="assessments.html">🧠 Online Assessments</a></li>
+        <li><a href="career-path.html">🚀 Career Trajectory</a></li>
+        <li><a href="interviews.html">📅 Interviews</a></li>
         <li><a href="notifications.html">🔔 Notifications</a></li>
         <li><a href="../jobs.html">🔍 Search Jobs</a></li>
       </ul>
@@ -48,143 +112,349 @@
 
     <!-- Main Content -->
     <main class="dashboard-content">
-      <div class="card mb-3">
-        <div class="card-header">
-          <h3>Personal Profile & Information</h3>
-          <span class="text-muted" style="font-size: 0.85rem;">Keep your details accurate to attract recruiters</span>
+      <!-- Profile Completion Banner -->
+      <div class="card mb-4" style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border-color: #bfdbfe;">
+        <div class="flex justify-between items-center" style="flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h3 style="color: #1e3a8a; margin-bottom: 0.25rem;">Candidate Profile Strength</h3>
+            <p class="text-muted" style="font-size: 0.88rem;">
+              Complete your profile dimensions to maximize weighted match scores for open vacancies.
+            </p>
+          </div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #15803d;" id="profile-pct-text">85%</div>
         </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="profile-progress-bar" style="width: 85%;"></div>
+        </div>
+      </div>
 
-        <form id="applicant-profile-form">
-          <h4 class="mb-2" style="color: var(--primary);">1. Contact Details</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="prof-fullName">Full Name</label>
-              <input type="text" id="prof-fullName" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-email">Email (Account ID)</label>
-              <input type="email" id="prof-email" class="form-control" readonly style="background: #f1f5f9;">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-phone">Phone</label>
-              <input type="tel" id="prof-phone" class="form-control">
-            </div>
+      <!-- Navigation Tabs -->
+      <div class="profile-nav-tabs">
+        <div class="profile-nav-tab active" data-tab="tab-personal">👤 Personal Info</div>
+        <div class="profile-nav-tab" data-tab="tab-skills">🎯 Technical Skills</div>
+        <div class="profile-nav-tab" data-tab="tab-education">🎓 Education</div>
+        <div class="profile-nav-tab" data-tab="tab-experience">💼 Work Experience</div>
+        <div class="profile-nav-tab" data-tab="tab-projects">🚀 Projects</div>
+        <div class="profile-nav-tab" data-tab="tab-resume">📄 Resume Analyzer</div>
+      </div>
+
+      <!-- Tab 1: Personal Details -->
+      <div id="tab-personal" class="tab-content active">
+        <div class="card">
+          <div class="card-header">
+            <h3>Personal &amp; Contact Details</h3>
+            <span class="text-muted" style="font-size: 0.85rem;">Essential contact info seen by recruiters</span>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="prof-dob">Date of Birth</label>
-              <input type="date" id="prof-dob" class="form-control">
+          <form id="candidate-profile-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" id="cand-fullName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Account Email</label>
+                <input type="email" id="cand-email" class="form-control" readonly style="background: #f1f5f9;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number *</label>
+                <input type="tel" id="cand-phone" class="form-control" placeholder="+1 (555) 000-0000">
+              </div>
             </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" id="cand-dob" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select id="cand-gender" class="form-control">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <input type="text" id="cand-city" class="form-control" placeholder="e.g. San Francisco">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Country</label>
+                <input type="text" id="cand-country" class="form-control" placeholder="e.g. United States">
+              </div>
+            </div>
+
             <div class="form-group">
-              <label class="form-label" for="prof-gender">Gender</label>
-              <select id="prof-gender" class="form-control">
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
+              <label class="form-label">Street / Residential Address</label>
+              <input type="text" id="cand-address" class="form-control" placeholder="123 Innovation Drive">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Professional Summary / Bio</label>
+              <textarea id="cand-bio" class="form-control" rows="3" placeholder="Passionate software engineer experienced with Core Java, relational SQL, problem solving, and modern microservices..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg mt-3">
+              Save Personal Details
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab 2: Technical Skills Taxonomy -->
+      <div id="tab-skills" class="tab-content">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h3>Add Technical Skill</h3>
+            <span class="text-muted" style="font-size: 0.85rem;">Select from master industry taxonomy</span>
+          </div>
+
+          <form id="form-add-skill" class="form-row" style="align-items: flex-end;">
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">Technical Skill *</label>
+              <select id="skill-selector" class="form-control" required>
+                <option value="">Loading taxonomy...</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-city">City</label>
-              <input type="text" id="prof-city" class="form-control">
+            <div class="form-group" style="flex: 1.5;">
+              <label class="form-label">Proficiency Level</label>
+              <select id="skill-proficiency" class="form-control">
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate" selected>Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Expert">Expert</option>
+              </select>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-country">Country</label>
-              <input type="text" id="prof-country" class="form-control">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Experience (Years)</label>
+              <input type="number" id="skill-years" class="form-control" min="0" max="40" value="2">
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="prof-address">Residential Address</label>
-            <input type="text" id="prof-address" class="form-control">
-          </div>
-
-          <h4 class="mb-2 mt-3" style="color: var(--primary);">2. Education Background</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="prof-education">Degree / Qualification</label>
-              <input type="text" id="prof-education" class="form-control">
+            <div class="form-group" style="flex: 1;">
+              <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem;">+ Add Skill</button>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-university">College / Institute</label>
-              <input type="text" id="prof-university" class="form-control">
-            </div>
-            <div class="form-group" style="flex: 0 0 130px;">
-              <label class="form-label" for="prof-gradYear">Graduation Year</label>
-              <input type="number" id="prof-gradYear" class="form-control">
-            </div>
-          </div>
-
-          <h4 class="mb-2 mt-3" style="color: var(--primary);">3. Technical Skills & Experience</h4>
-          <div class="form-group">
-            <label class="form-label" for="prof-skills">Technical Skills (comma-separated)</label>
-            <input type="text" id="prof-skills" class="form-control" placeholder="Java, MySQL, Spring, REST API, HTML5, JavaScript">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="prof-exp">Experience (Years)</label>
-              <input type="number" id="prof-exp" class="form-control" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-salary">Expected Salary / Compensation</label>
-              <input type="text" id="prof-salary" class="form-control" placeholder="e.g. $90,000 / yr">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="prof-linkedin">LinkedIn Profile</label>
-              <input type="url" id="prof-linkedin" class="form-control">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-github">GitHub Profile</label>
-              <input type="url" id="prof-github" class="form-control">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="prof-leetcode">LeetCode / Portfolio</label>
-              <input type="url" id="prof-leetcode" class="form-control">
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-lg mt-3">
-            Save Profile Changes
-          </button>
-        </form>
-      </div>
-
-      <!-- Resume Management Card -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Verified PDF Resume</h3>
-          <span class="text-muted" style="font-size: 0.85rem;">Used automatically when applying for new jobs</span>
+          </form>
         </div>
 
-        <div id="current-resume-display" class="mb-3">
-          <!-- Dynamic resume file badge -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Your Declared Technical Skills</h3>
+            <span class="badge badge-info" id="skills-count-badge">0 Skills</span>
+          </div>
+          <div id="candidate-skills-container" style="min-height: 80px; padding: 0.5rem 0;">
+            <p class="text-muted">Loading declared skills...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Education History -->
+      <div id="tab-education" class="tab-content">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h3>Add Degree or Qualification</h3>
+          </div>
+          <form id="form-add-edu">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Degree *</label>
+                <input type="text" id="edu-degree" class="form-control" placeholder="Bachelor of Science" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Institution / University *</label>
+                <input type="text" id="edu-inst" class="form-control" placeholder="Stanford University" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Field of Study</label>
+                <input type="text" id="edu-field" class="form-control" placeholder="Computer Science">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Start Year</label>
+                <input type="number" id="edu-start" class="form-control" placeholder="2018">
+              </div>
+              <div class="form-group">
+                <label class="form-label">End Year</label>
+                <input type="number" id="edu-end" class="form-control" placeholder="2022">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Grade / GPA / CGPA</label>
+                <input type="text" id="edu-grade" class="form-control" placeholder="3.85 GPA or 8.5 CGPA">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">+ Add Education Entry</button>
+          </form>
         </div>
 
-        <form id="applicant-resume-form">
-          <div class="form-group">
-            <label class="form-label">Upload / Replace PDF Resume</label>
-            <input type="file" id="prof-resume-input" class="form-control" accept=".pdf,application/pdf" required>
+        <div class="card">
+          <div class="card-header">
+            <h3>Education History</h3>
           </div>
-          <button type="submit" class="btn btn-secondary">
-            Upload New Resume
-          </button>
-        </form>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Degree</th>
+                  <th>Institution</th>
+                  <th>Field of Study</th>
+                  <th>Years</th>
+                  <th>Grade</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="education-table-body">
+                <tr><td colspan="6" class="text-muted text-center">Loading education history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      <!-- Tab 4: Work Experience -->
+      <div id="tab-experience" class="tab-content">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h3>Add Work Experience</h3>
+          </div>
+          <form id="form-add-exp">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Company Name *</label>
+                <input type="text" id="exp-company" class="form-control" placeholder="Acme Corp" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Job Title *</label>
+                <input type="text" id="exp-title" class="form-control" placeholder="Associate Software Engineer" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Start Date</label>
+                <input type="date" id="exp-start" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">End Date</label>
+                <input type="date" id="exp-end" class="form-control">
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1.75rem;">
+                <input type="checkbox" id="exp-current" style="width: 18px; height: 18px;">
+                <label for="exp-current" style="margin-bottom: 0;">Currently Working Here</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Key Responsibilities / Impact</label>
+              <textarea id="exp-desc" class="form-control" rows="2" placeholder="Developed high-throughput APIs, improved database query latency by 30%..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">+ Add Experience Entry</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Work Experience History</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Job Title</th>
+                  <th>Company</th>
+                  <th>Duration</th>
+                  <th>Description</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="experience-table-body">
+                <tr><td colspan="5" class="text-muted text-center">Loading experience history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Portfolio Projects -->
+      <div id="tab-projects" class="tab-content">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h3>Add Portfolio Project</h3>
+          </div>
+          <form id="form-add-proj">
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">Project Title *</label>
+                <input type="text" id="proj-title" class="form-control" placeholder="Online Placement & Skill Matching Portal" required>
+              </div>
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">Technologies Used</label>
+                <input type="text" id="proj-tech" class="form-control" placeholder="Core Java, MySQL, JDBC, HTML5/CSS3">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Project / GitHub URL</label>
+              <input type="url" id="proj-url" class="form-control" placeholder="https://github.com/username/project">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Project Overview &amp; Architecture</label>
+              <textarea id="proj-desc" class="form-control" rows="2" placeholder="Designed and implemented a multi-tenant recruitment engine with adaptive assessments..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">+ Add Project</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Portfolio Projects</h3>
+          </div>
+          <div id="projects-container">
+            <p class="text-muted">Loading projects...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 6: Resume Keyword Extractor -->
+      <div id="tab-resume" class="tab-content">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h3>Resume Technical Keyword Extractor</h3>
+            <span class="badge badge-info">Algorithmic NLP Parser</span>
+          </div>
+          <p class="text-muted mb-3" style="font-size: 0.92rem;">
+            Paste resume text or upload your PDF resume below. Our algorithmic parser matches words against the master technical skill taxonomy to identify matched competencies.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Paste Resume Content or Project Summary</label>
+            <textarea id="resume-raw-text" class="form-control" rows="6" placeholder="Paste resume plain text here (e.g. 'Skilled Java developer with 3 years building REST APIs, optimizing MySQL schemas, leveraging Docker and AWS...')."></textarea>
+          </div>
+
+          <div class="flex gap-2 mb-4">
+            <button type="button" class="btn btn-primary" id="btn-analyze-resume-text">🔍 Extract Keywords</button>
+            <button type="button" class="btn btn-outline" id="btn-load-sample-resume">Load Sample Resume Text</button>
+          </div>
+
+          <!-- Extraction Results Box -->
+          <div id="extractor-results-box" style="display: none; padding: 1.25rem; background: var(--surface-alt); border-radius: var(--radius); border: 1px solid var(--border);">
+            <div class="flex justify-between items-center mb-2">
+              <strong style="color: var(--secondary);">Detected Skills (<span id="extracted-count">0</span>):</strong>
+              <button type="button" class="btn btn-sm btn-primary" id="btn-add-all-extracted">+ Add All To My Skills</button>
+            </div>
+            <div id="extracted-skills-chips"></div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
   <footer class="footer">
     <div class="container text-center">
-      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+      <p>&copy; 2026 SmartRecruit &bull; Core Java &amp; JDBC Architecture</p>
     </div>
   </footer>
 
+  <script src="../js/api.js"></script>
   <script src="../js/common.js"></script>
-  <script src="../js/applicant.js"></script>
+  <script src="../js/candidate.js"></script>
 </body>
 </html>

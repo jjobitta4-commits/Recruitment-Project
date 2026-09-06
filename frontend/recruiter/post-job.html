@@ -8,6 +8,46 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .skill-chip-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      min-height: 52px;
+      align-items: center;
+    }
+    .skill-badge-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 0.35rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .skill-badge-item.mandatory {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .skill-badge-item.preferred {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .skill-badge-remove {
+      cursor: pointer;
+      color: #ef4444;
+      font-weight: bold;
+      margin-left: 2px;
+    }
+  </style>
 </head>
 <body>
 
@@ -27,7 +67,7 @@
           <li><a href="candidates.html">Candidates</a></li>
         </ul>
         <div class="nav-actions">
-          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <span class="user-greeting" id="recruiter-navbar-name">Recruiter Portal</span>
           <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
         </div>
       </div>
@@ -51,40 +91,43 @@
         <div class="card-header">
           <div>
             <h2>Post a New Job Opening</h2>
-            <p class="text-muted" style="font-size: 0.9rem;">Fill out the requirements and details to publish a new vacancy</p>
+            <p class="text-muted" style="font-size: 0.9rem;">Define job role attributes and decompose technical requirements into Mandatory vs Preferred skills</p>
           </div>
+          <span class="badge badge-success" style="font-size: 0.85rem;">Smart Match Enabled</span>
         </div>
 
         <form id="post-job-form">
+          <!-- Basic Job Details -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="job-title">Job Title *</label>
               <input type="text" id="job-title" class="form-control" placeholder="e.g. Senior Java Backend Engineer" required>
             </div>
             <div class="form-group">
-              <label class="form-label" for="job-company">Company Name *</label>
-              <input type="text" id="job-company" class="form-control" placeholder="e.g. Apex Cloud Solutions" required>
+              <label class="form-label" for="job-company">Hiring Company *</label>
+              <input type="text" id="job-company" class="form-control" list="companies-list" placeholder="e.g. Apex Cloud Solutions" required>
+              <datalist id="companies-list"></datalist>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="job-type">Job Type *</label>
+              <label class="form-label" for="job-type">Employment Type *</label>
               <select id="job-type" class="form-control" required>
                 <option value="Full Time">Full Time</option>
                 <option value="Part Time">Part Time</option>
-                <option value="Internship">Internship</option>
                 <option value="Contract">Contract</option>
+                <option value="Internship">Internship</option>
                 <option value="Remote">Remote</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="job-vacancies">Number of Vacancies</label>
+              <label class="form-label" for="job-vacancies">Vacancies Available</label>
               <input type="number" id="job-vacancies" class="form-control" value="1" min="1" max="100">
             </div>
             <div class="form-group">
-              <label class="form-label" for="job-salary">Salary Range / Compensation</label>
-              <input type="text" id="job-salary" class="form-control" placeholder="e.g. $90,000 - $110,000 / yr">
+              <label class="form-label" for="job-salary">Compensation / Salary Range</label>
+              <input type="text" id="job-salary" class="form-control" placeholder="e.g. $85,000 - $110,000 / yr">
             </div>
           </div>
 
@@ -105,28 +148,95 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="job-experience">Experience Requirement</label>
-              <input type="text" id="job-experience" class="form-control" placeholder="e.g. 1 - 3 Years (or Freshers)">
+              <label class="form-label" for="job-min-experience">Minimum Experience (Years) *</label>
+              <input type="number" id="job-min-experience" class="form-control" value="2" min="0" max="30" required>
             </div>
             <div class="form-group">
-              <label class="form-label" for="job-education">Education / Degree</label>
-              <input type="text" id="job-education" class="form-control" placeholder="e.g. B.S. in Computer Science or equivalent">
+              <label class="form-label" for="job-education">Minimum Education Requirement</label>
+              <select id="job-education" class="form-control">
+                <option value="Bachelor's Degree in Computer Science or related">Bachelor's Degree in Computer Science or related</option>
+                <option value="Master's Degree in Software Engineering or related">Master's Degree in Software Engineering or related</option>
+                <option value="Associate Degree / Diploma">Associate Degree / Diploma</option>
+                <option value="High School / Self-Taught">High School / Self-Taught</option>
+                <option value="Any Degree">Any Degree</option>
+              </select>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="job-skills">Required Skills (comma-separated) *</label>
-            <input type="text" id="job-skills" class="form-control" placeholder="Java, JDBC, MySQL, REST APIs, Git" required>
+          <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #e2e8f0;">
+
+          <!-- INNOVATION: Dual Skills Engine (Mandatory vs Preferred) -->
+          <div style="margin-bottom: 1.5rem;">
+            <div class="flex justify-between items-center mb-1">
+              <h3 style="font-size: 1.05rem; color: #0f172a;">🎯 Skill Requirements Decomposition</h3>
+              <span class="text-muted" style="font-size: 0.8rem;">Weights: Mandatory 45% matching score &bull; Preferred 15% bonus</span>
+            </div>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1rem;">
+              Candidates will be auto-scored by the matching algorithm. Mandatory skills are non-negotiable prerequisites.
+            </p>
+
+            <div class="card" style="background: #fdfdfd; border: 1px solid #e2e8f0; padding: 1.2rem; margin-bottom: 1rem;">
+              <div class="form-row" style="grid-template-columns: 2fr 1.5fr 1fr 1fr auto; align-items: flex-end; gap: 0.75rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Skill Name *</label>
+                  <input type="text" id="skill-input-name" class="form-control" list="master-skills-datalist" placeholder="e.g. Java, MySQL, Docker">
+                  <datalist id="master-skills-datalist"></datalist>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Category</label>
+                  <select id="skill-input-category" class="form-control">
+                    <option value="Backend">Backend</option>
+                    <option value="Frontend">Frontend</option>
+                    <option value="Database">Database</option>
+                    <option value="Cloud/DevOps">Cloud / DevOps</option>
+                    <option value="Security">Security</option>
+                    <option value="Mobile">Mobile</option>
+                    <option value="Technical">General Technical</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Type</label>
+                  <select id="skill-input-mandatory" class="form-control">
+                    <option value="true">Mandatory</option>
+                    <option value="false">Preferred</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Min Yrs</label>
+                  <input type="number" id="skill-input-years" class="form-control" value="1" min="0" max="25">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="addSkillToPostList()" style="height: 42px;">+ Add</button>
+              </div>
+            </div>
+
+            <!-- Mandatory Skills Chips -->
+            <div class="mb-2">
+              <label class="form-label" style="color: #991b1b; font-weight: 700;">Mandatory Skills (Must have at least one):</label>
+              <div id="mandatory-skills-chips" class="skill-chip-box">
+                <span class="text-muted" style="font-size: 0.82rem;">No mandatory skills added yet.</span>
+              </div>
+            </div>
+
+            <!-- Preferred Skills Chips -->
+            <div class="mb-2">
+              <label class="form-label" style="color: #0369a1; font-weight: 700;">Preferred / Nice-to-Have Skills:</label>
+              <div id="preferred-skills-chips" class="skill-chip-box">
+                <span class="text-muted" style="font-size: 0.82rem;">No preferred skills added yet (optional).</span>
+              </div>
+            </div>
           </div>
 
+          <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #e2e8f0;">
+
+          <!-- Description -->
           <div class="form-group">
             <label class="form-label" for="job-description">Job Description & Responsibilities *</label>
-            <textarea id="job-description" class="form-control" rows="6" placeholder="Describe the role responsibilities, tech stack, team culture, and day-to-day work..." required></textarea>
+            <textarea id="job-description" class="form-control" rows="6" placeholder="Describe key responsibilities, deliverables, team culture, and day-to-day stack..." required></textarea>
           </div>
 
           <div class="flex gap-2 justify-between items-center mt-3">
             <a href="manage-jobs.html" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary btn-lg">Publish Job Vacancy</button>
+            <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-job">Publish Job Vacancy</button>
           </div>
         </form>
       </div>

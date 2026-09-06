@@ -13,7 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Static file server for serving Frontend HTML, CSS, JavaScript, and Uploaded Resumes.
+ * Static file server for serving Frontend HTML, CSS, JavaScript, and Uploaded Files.
+ * Includes path traversal protection and automatic MIME type resolution.
  */
 public class StaticFileHandler implements HttpHandler {
 
@@ -56,33 +57,51 @@ public class StaticFileHandler implements HttpHandler {
         URI uri = exchange.getRequestURI();
         String path = uri.getPath();
 
-        // Check if serving from uploads directory
+        // Prevent directory traversal attacks
+        if (path.contains("..") || path.contains("./") || path.contains("//")) {
+            ResponseHelper.sendError(exchange, 403, "Access Forbidden");
+            return;
+        }
+
         File targetFile;
+        File baseDir;
+
         if (path.startsWith("/uploads/")) {
             String relPath = path.substring("/uploads/".length());
-            targetFile = new File(uploadsRoot, relPath);
+            baseDir = new File(uploadsRoot).getCanonicalFile();
+            targetFile = new File(baseDir, relPath).getCanonicalFile();
         } else {
-            // Support requests prefixed with /frontend/
             if (path.startsWith("/frontend/")) {
                 path = path.substring("/frontend".length());
             }
-            // Serving from frontend directory
             if (path.equals("/") || path.isEmpty()) {
                 path = "/index.html";
+            } else if (path.equals("/candidate") || path.equals("/candidate/")) {
+                path = "/candidate/dashboard.html";
             } else if (path.equals("/applicant") || path.equals("/applicant/")) {
                 path = "/applicant/dashboard.html";
             } else if (path.equals("/recruiter") || path.equals("/recruiter/")) {
                 path = "/recruiter/dashboard.html";
+            } else if (path.equals("/admin") || path.equals("/admin/")) {
+                path = "/admin/dashboard.html";
             }
+
             String safePath = path.startsWith("/") ? path.substring(1) : path;
-            targetFile = new File(frontendRoot, safePath);
+            baseDir = new File(frontendRoot).getCanonicalFile();
+            targetFile = new File(baseDir, safePath).getCanonicalFile();
+        }
+
+        // Verify target remains within allowed directory boundary
+        if (!targetFile.getPath().startsWith(baseDir.getPath())) {
+            ResponseHelper.sendError(exchange, 403, "Access Denied");
+            return;
         }
 
         if (!targetFile.exists() || targetFile.isDirectory()) {
             // Check if adding .html helps (e.g. /login -> /login.html)
             String safePath = path.startsWith("/") ? path.substring(1) : path;
-            File htmlVariant = new File(frontendRoot, safePath + ".html");
-            if (htmlVariant.exists() && !htmlVariant.isDirectory()) {
+            File htmlVariant = new File(baseDir, safePath + ".html").getCanonicalFile();
+            if (htmlVariant.exists() && !htmlVariant.isDirectory() && htmlVariant.getPath().startsWith(baseDir.getPath())) {
                 targetFile = htmlVariant;
             } else {
                 ResponseHelper.sendError(exchange, 404, "Resource Not Found: " + path);
@@ -101,6 +120,7 @@ public class StaticFileHandler implements HttpHandler {
 
         // Send headers and file content
         exchange.getResponseHeaders().set("Content-Type", contentType);
+        exchange.getResponseHeaders().set("Cache-Control", "no-cache, must-revalidate");
         if ("pdf".equals(ext)) {
             exchange.getResponseHeaders().set("Content-Disposition", "inline; filename=\"" + fileName + "\"");
         }

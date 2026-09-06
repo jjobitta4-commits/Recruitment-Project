@@ -3,6 +3,7 @@ package com.recruitment.server;
 import com.recruitment.dao.*;
 import com.recruitment.model.Applicant;
 import com.recruitment.model.Application;
+import com.recruitment.model.Candidate;
 import com.recruitment.model.Interview;
 import com.recruitment.model.Job;
 import com.recruitment.model.Recruiter;
@@ -25,6 +26,7 @@ public class InterviewHandler implements HttpHandler {
     private final InterviewDAO interviewDAO = new InterviewDAO();
     private final ApplicationDAO applicationDAO = new ApplicationDAO();
     private final ApplicantDAO applicantDAO = new ApplicantDAO();
+    private final CandidateDAO candidateDAO = new CandidateDAO();
     private final RecruiterDAO recruiterDAO = new RecruiterDAO();
     private final JobDAO jobDAO = new JobDAO();
     private final NotificationDAO notificationDAO = new NotificationDAO();
@@ -49,6 +51,8 @@ public class InterviewHandler implements HttpHandler {
                 case "PUT":
                     if (path.endsWith("/status")) {
                         handleUpdateStatus(exchange);
+                    } else if (path.endsWith("/evaluate")) {
+                        handleEvaluateInterview(exchange);
                     } else {
                         ResponseHelper.sendError(exchange, 404, "Endpoint not found");
                     }
@@ -114,21 +118,30 @@ public class InterviewHandler implements HttpHandler {
             return;
         }
 
-        Interview iv = new Interview();
-        iv.setApplicationId(applicationId);
-        iv.setApplicantId(app.getApplicantId());
-        iv.setJobId(app.getJobId());
-        try {
-            iv.setInterviewDate(Date.valueOf(dateStr.trim()));
-        } catch (Exception e) {
-            ResponseHelper.sendError(exchange, 400, "Invalid date format. Expected YYYY-MM-DD.");
+        Date parsedDate = parseDateSafely(dateStr);
+        if (parsedDate == null) {
+            ResponseHelper.sendError(exchange, 400, "Invalid date format. Expected YYYY-MM-DD or DD-MM-YYYY.");
             return;
         }
+
+        int recruiterId = getOrResolveRecruiterId(session);
+        if (recruiterId <= 0) {
+            recruiterId = app.getRecruiterId();
+        }
+
+        Interview iv = new Interview();
+        iv.setApplicationId(applicationId);
+        iv.setRecruiterId(recruiterId);
+        iv.setCandidateId(app.getCandidateId());
+        iv.setApplicantId(app.getCandidateId());
+        iv.setJobId(app.getJobId());
+        iv.setInterviewDate(parsedDate);
         iv.setInterviewTime(timeStr);
         iv.setInterviewType(type);
         iv.setMeetingLink(meetingLink);
         iv.setStatus("Scheduled");
         iv.setNotes(notes);
+        iv.setFeedback(notes);
 
         boolean success = interviewDAO.scheduleInterview(iv);
         if (!success) {
@@ -139,13 +152,20 @@ public class InterviewHandler implements HttpHandler {
         // Update application status to "Interview Scheduled"
         applicationDAO.updateApplicationStatus(applicationId, "Interview Scheduled");
 
-        // Notify applicant
-        Applicant applicant = applicantDAO.getApplicantById(app.getApplicantId());
-        if (applicant != null) {
+        // Notify candidate/applicant
+        Candidate cand = candidateDAO.getCandidateById(app.getCandidateId());
+        int notifyUserId = (cand != null) ? cand.getUserId() : 0;
+        if (notifyUserId <= 0) {
+            Applicant applicant = applicantDAO.getApplicantById(app.getApplicantId());
+            if (applicant != null) notifyUserId = applicant.getUserId();
+        }
+
+        if (notifyUserId > 0) {
+            String companyName = app.getCompany() != null ? app.getCompany() : "Hiring Company";
             String msg = String.format("An %s interview has been scheduled for '%s' at '%s' on %s at %s. Link/Location: %s",
-                    type, app.getJobTitle(), app.getCompany(), dateStr, timeStr,
+                    type, app.getJobTitle(), companyName, dateStr, timeStr,
                     (meetingLink.isEmpty() ? "See interview details in portal" : meetingLink));
-            notificationDAO.createNotification(applicant.getUserId(), "Interview Scheduled", msg);
+            notificationDAO.createNotification(notifyUserId, "Interview Scheduled", msg);
         }
 
         ResponseHelper.sendSuccess(exchange, "Interview scheduled successfully!", iv);
@@ -185,9 +205,54 @@ public class InterviewHandler implements HttpHandler {
         }
     }
 
+    private void handleEvaluateInterview(HttpExchange exchange) throws IOException {
+        SessionManager.UserSession session = SessionManager.getSessionFromExchange(exchange);
+        if (session == null || !session.isRecruiter()) {
+            ResponseHelper.sendError(exchange, 403, "Only recruiters can submit interview evaluations.");
+            return;
+        }
+
+        String body = ResponseHelper.readBody(exchange);
+        Map<String, Object> data = JSONUtil.parseObject(body);
+
+        int interviewId = JSONUtil.getInt(data, "interviewId", 0);
+        int rating = JSONUtil.getInt(data, "rating", 5);
+        String feedback = JSONUtil.getString(data, "feedback", "");
+        String status = JSONUtil.getString(data, "status", "Completed");
+        String applicationStatus = JSONUtil.getString(data, "applicationStatus", "");
+
+        if (interviewId <= 0) {
+            ResponseHelper.sendError(exchange, 400, "Invalid interviewId.");
+            return;
+        }
+
+        boolean ok = interviewDAO.saveEvaluation(interviewId, rating, feedback, status);
+        if (ok) {
+            Interview iv = interviewDAO.getInterviewById(interviewId);
+            if (iv != null) {
+                if (applicationStatus != null && !applicationStatus.isEmpty()) {
+                    applicationDAO.updateApplicationStatus(iv.getApplicationId(), applicationStatus);
+                }
+                Applicant applicant = applicantDAO.getApplicantById(iv.getApplicantId());
+                if (applicant != null) {
+                    notificationDAO.createNotification(applicant.getUserId(), "Interview Completed & Evaluated",
+                            "Your interview for '" + iv.getJobTitle() + "' has been evaluated by the hiring team.");
+                }
+            }
+            ResponseHelper.sendSuccess(exchange, "Evaluation successfully saved!");
+        } else {
+            ResponseHelper.sendError(exchange, 500, "Failed to save evaluation.");
+        }
+    }
+
     private int getOrResolveApplicantId(SessionManager.UserSession session) {
-        if (session.getApplicantId() != null && session.getApplicantId() > 0) {
-            return session.getApplicantId();
+        if (session.getCandidateId() != null && session.getCandidateId() > 0) {
+            return session.getCandidateId();
+        }
+        Candidate c = candidateDAO.getCandidateByUserId(session.getUserId());
+        if (c != null) {
+            session.setCandidateId(c.getCandidateId());
+            return c.getCandidateId();
         }
         Applicant ap = applicantDAO.getApplicantByUserId(session.getUserId());
         if (ap != null) {
@@ -207,5 +272,28 @@ public class InterviewHandler implements HttpHandler {
             return r.getRecruiterId();
         }
         return -1;
+    }
+
+    private Date parseDateSafely(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+        dateStr = dateStr.trim();
+        try {
+            return Date.valueOf(dateStr);
+        } catch (Exception ignored) {}
+        try {
+            String[] parts = dateStr.split("[-/]");
+            if (parts.length == 3) {
+                if (parts[0].length() == 4) { // YYYY-MM-DD
+                    return Date.valueOf(parts[0] + "-" + pad2(parts[1]) + "-" + pad2(parts[2]));
+                } else if (parts[2].length() == 4) { // DD-MM-YYYY
+                    return Date.valueOf(parts[2] + "-" + pad2(parts[1]) + "-" + pad2(parts[0]));
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private String pad2(String s) {
+        return s.length() == 1 ? "0" + s : s;
     }
 }

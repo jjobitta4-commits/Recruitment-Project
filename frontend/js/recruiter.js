@@ -54,6 +54,21 @@ async function loadRecruiterDashboard() {
       document.getElementById('stat-rec-total-apps').textContent = statsRes.data.totalApplications || 0;
       document.getElementById('stat-rec-shortlisted').textContent = statsRes.data.shortlistedCandidates || 0;
       document.getElementById('stat-rec-selected').textContent = statsRes.data.selectedCandidates || 0;
+
+      // Populate Conversion Funnel
+      const totalApps = statsRes.data.totalApplications || 0;
+      const shortlisted = statsRes.data.shortlistedCandidates || 0;
+      const selected = statsRes.data.selectedCandidates || 0;
+
+      const elIntake = document.getElementById('funnel-intake');
+      const elScreened = document.getElementById('funnel-screened');
+      const elInterviewing = document.getElementById('funnel-interviewing');
+      const elHired = document.getElementById('funnel-hired');
+
+      if (elIntake) elIntake.textContent = totalApps;
+      if (elScreened) elScreened.textContent = shortlisted;
+      if (elInterviewing) elInterviewing.textContent = Math.max(0, shortlisted - selected);
+      if (elHired) elHired.textContent = selected;
     }
 
     if (appsRes.success && Array.isArray(appsRes.data)) {
@@ -111,12 +126,117 @@ function renderRecentRecruiterNotifs(notifs) {
 }
 
 // ==========================================
-// 2. Post Job
+// 2. Post Job with Dual-Skills Decomposition
 // ==========================================
-function initPostJobPage() {
+let postJobSkills = [
+  { name: 'Java', category: 'Backend', isMandatory: true, minYearsRequired: 2 },
+  { name: 'MySQL', category: 'Database', isMandatory: true, minYearsRequired: 1 }
+];
+
+async function initPostJobPage() {
   const form = document.getElementById('post-job-form');
   if (form) {
     form.addEventListener('submit', handlePostJobSubmit);
+  }
+
+  // Load registered companies for autocomplete
+  try {
+    const compRes = await authFetch('/api/companies');
+    if (compRes.success && Array.isArray(compRes.data)) {
+      const dl = document.getElementById('companies-list');
+      if (dl) {
+        dl.innerHTML = compRes.data.map(c => `<option value="${c.name}">`).join('');
+      }
+    }
+  } catch (ignored) {}
+
+  // Load master skills taxonomy
+  try {
+    const skillsRes = await authFetch('/api/candidate/skills');
+    if (skillsRes.success && Array.isArray(skillsRes.data)) {
+      const dl = document.getElementById('master-skills-datalist');
+      if (dl) {
+        dl.innerHTML = skillsRes.data.map(s => `<option value="${s.name}">`).join('');
+      }
+    }
+  } catch (ignored) {}
+
+  renderPostJobSkills();
+}
+
+function addSkillToPostList() {
+  const nameEl = document.getElementById('skill-input-name');
+  const catEl = document.getElementById('skill-input-category');
+  const mandEl = document.getElementById('skill-input-mandatory');
+  const yearsEl = document.getElementById('skill-input-years');
+
+  const name = (nameEl.value || '').trim();
+  if (!name) {
+    showToast('Please enter a skill name.', 'error');
+    return;
+  }
+
+  const category = catEl.value || 'Backend';
+  const isMandatory = mandEl.value === 'true';
+  const minYears = parseInt(yearsEl.value) || 1;
+
+  // Avoid duplicates
+  const existing = postJobSkills.find(s => s.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    showToast(`Skill "${name}" is already added.`, 'error');
+    return;
+  }
+
+  postJobSkills.push({ name, category, isMandatory, minYearsRequired: minYears });
+  nameEl.value = '';
+  renderPostJobSkills();
+  showToast(`Added ${isMandatory ? 'mandatory' : 'preferred'} skill: ${name}`, 'success');
+}
+
+function removeSkillFromPostList(idx) {
+  if (idx >= 0 && idx < postJobSkills.length) {
+    postJobSkills.splice(idx, 1);
+    renderPostJobSkills();
+  }
+}
+
+function renderPostJobSkills() {
+  const mandContainer = document.getElementById('mandatory-skills-chips');
+  const prefContainer = document.getElementById('preferred-skills-chips');
+
+  const mandatory = postJobSkills.filter(s => s.isMandatory);
+  const preferred = postJobSkills.filter(s => !s.isMandatory);
+
+  if (mandContainer) {
+    if (mandatory.length === 0) {
+      mandContainer.innerHTML = '<span class="text-muted" style="font-size: 0.82rem;">⚠️ No mandatory skills added yet. At least one required.</span>';
+    } else {
+      mandContainer.innerHTML = mandatory.map(s => {
+        const globalIdx = postJobSkills.indexOf(s);
+        return `
+          <span class="skill-badge-item mandatory">
+            <span>🔴 <strong>${s.name}</strong> (${s.minYearsRequired}y+ req)</span>
+            <span class="skill-badge-remove" onclick="removeSkillFromPostList(${globalIdx})" title="Remove skill">&times;</span>
+          </span>
+        `;
+      }).join('');
+    }
+  }
+
+  if (prefContainer) {
+    if (preferred.length === 0) {
+      prefContainer.innerHTML = '<span class="text-muted" style="font-size: 0.82rem;">No preferred skills added (optional).</span>';
+    } else {
+      prefContainer.innerHTML = preferred.map(s => {
+        const globalIdx = postJobSkills.indexOf(s);
+        return `
+          <span class="skill-badge-item preferred">
+            <span>🔵 ${s.name} (${s.category})</span>
+            <span class="skill-badge-remove" onclick="removeSkillFromPostList(${globalIdx})" title="Remove skill">&times;</span>
+          </span>
+        `;
+      }).join('');
+    }
   }
 }
 
@@ -124,6 +244,12 @@ async function handlePostJobSubmit(e) {
   e.preventDefault();
   const form = e.target;
   const submitBtn = form.querySelector('button[type="submit"]');
+
+  const mandatory = postJobSkills.filter(s => s.isMandatory);
+  if (mandatory.length === 0) {
+    showToast('Please add at least one Mandatory Skill requirement.', 'error');
+    return;
+  }
 
   const payload = {
     title: document.getElementById('job-title').value.trim(),
@@ -133,15 +259,17 @@ async function handlePostJobSubmit(e) {
     location: document.getElementById('job-location').value.trim(),
     country: document.getElementById('job-country').value.trim(),
     salaryRange: document.getElementById('job-salary').value.trim(),
-    experienceRequired: document.getElementById('job-experience').value.trim(),
-    educationRequired: document.getElementById('job-education').value.trim(),
+    minExperienceYears: parseInt(document.getElementById('job-min-experience').value) || 0,
+    educationRequired: document.getElementById('job-education').value,
     deadline: document.getElementById('job-deadline').value || null,
-    skillsRequired: document.getElementById('job-skills').value.trim(),
-    description: document.getElementById('job-description').value.trim()
+    description: document.getElementById('job-description').value.trim(),
+    skills: postJobSkills,
+    skillsRequired: postJobSkills.map(s => s.name).join(', '),
+    approvalStatus: 'approved'
   };
 
-  if (!payload.title || !payload.description || !payload.skillsRequired) {
-    showToast('Job Title, Skills, and Description are required.', 'error');
+  if (!payload.title || !payload.company || !payload.description) {
+    showToast('Job Title, Hiring Company, and Description are required.', 'error');
     return;
   }
 
@@ -159,7 +287,8 @@ async function handlePostJobSubmit(e) {
     if (res.success) {
       showToast('🎉 Job posted successfully! Candidates can now apply.', 'success');
       setTimeout(() => {
-        window.location.href = '/recruiter/manage-jobs.html';
+        const base = typeof getBasePath === 'function' ? getBasePath() : '';
+        window.location.href = base + 'recruiter/manage-jobs.html';
       }, 800);
     } else {
       showToast(res.message || 'Failed to post job.', 'error');
@@ -175,7 +304,7 @@ async function handlePostJobSubmit(e) {
 }
 
 // ==========================================
-// 3. Manage Jobs
+// 3. Manage Jobs with Approval & Dual Skills
 // ==========================================
 async function loadManageJobs() {
   const tbody = document.getElementById('manage-jobs-tbody');
@@ -187,30 +316,56 @@ async function loadManageJobs() {
       recruiterJobs = res.data;
 
       if (recruiterJobs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 2.5rem;">You have not posted any jobs yet. <a href="/recruiter/post-job.html">Post your first job</a></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 2.5rem;">You have not posted any jobs yet. <a href="post-job.html">Post your first job</a></td></tr>';
         return;
       }
 
-      tbody.innerHTML = recruiterJobs.map(j => `
-        <tr>
-          <td><strong>${j.title}</strong><br><span style="font-size: 0.8rem; color: #64748b;">${j.company}</span></td>
-          <td>${getJobTypeBadge(j.jobType)}</td>
-          <td>📍 ${j.location || 'Remote'}</td>
-          <td><span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: bold;">👥 ${j.applicationCount || 0} Apps</span></td>
-          <td>${formatDate(j.postedDate)}</td>
-          <td>
-            <button onclick="toggleJobStatus(${j.jobId}, '${j.status}')" class="badge ${j.status === 'Active' ? 'badge-active' : 'badge-closed'}" style="cursor: pointer; border: none;" title="Click to Toggle Status">
-              ${j.status} 🔄
-            </button>
-          </td>
-          <td>
-            <div class="flex gap-1">
-              <button onclick="openEditJobModal(${j.jobId})" class="btn btn-secondary btn-sm" title="Edit Job Details">✏️ Edit</button>
-              <button onclick="handleDeleteJob(${j.jobId})" class="btn btn-danger btn-sm" title="Delete Job">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = recruiterJobs.map(j => {
+        // Moderation badge
+        let apprBadge = '';
+        const appr = (j.approvalStatus || 'approved').toLowerCase();
+        if (appr === 'pending') {
+          apprBadge = '<span class="badge badge-warning" style="background: #fef3c7; color: #92400e; font-weight: 700;">⏳ Pending Review</span>';
+        } else if (appr === 'approved') {
+          apprBadge = '<span class="badge badge-success" style="background: #dcfce7; color: #166534; font-weight: 700;">✅ Approved &amp; Live</span>';
+        } else {
+          apprBadge = '<span class="badge badge-danger" style="background: #fee2e2; color: #991b1b; font-weight: 700;">🚫 Rejected</span>';
+        }
+
+        return `
+          <tr>
+            <td>
+              <strong style="font-size: 0.95rem; color: #0f172a;">${j.title}</strong><br>
+              <span style="font-size: 0.8rem; color: #64748b;">🏢 ${j.company} &bull; 📍 ${j.location || 'Remote'}</span>
+            </td>
+            <td>
+              ${getJobTypeBadge(j.jobType)}<br>
+              <small style="color: #64748b;">💼 ${j.experienceRequired || (j.minExperienceYears + '+ Yrs')}</small>
+            </td>
+            <td>
+              <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: bold; font-size: 0.85rem;">
+                👥 ${j.applicationCount || 0} Apps
+              </span>
+            </td>
+            <td>${apprBadge}</td>
+            <td>
+              <button onclick="toggleJobStatus(${j.jobId}, '${j.status}')" class="badge ${j.status === 'Active' ? 'badge-active' : 'badge-closed'}" style="cursor: pointer; border: none;" title="Click to Toggle Status">
+                ${j.status} 🔄
+              </button>
+            </td>
+            <td style="white-space: nowrap; font-size: 0.85rem; color: #64748b;">
+              ${formatDate(j.postedDate)}
+            </td>
+            <td>
+              <div class="flex gap-1">
+                <button onclick="viewJobOpeningModal(${j.jobId})" class="btn btn-secondary btn-sm" title="View Requirements">🔍 Details</button>
+                <button onclick="openEditJobModal(${j.jobId})" class="btn btn-secondary btn-sm" title="Edit Job Details">✏️</button>
+                <button onclick="handleDeleteJob(${j.jobId})" class="btn btn-danger btn-sm" title="Delete Job">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load jobs.</td></tr>';
@@ -221,6 +376,58 @@ async function loadManageJobs() {
   if (editForm) {
     editForm.addEventListener('submit', handleUpdateJobSubmit);
   }
+}
+
+function viewJobOpeningModal(jobId) {
+  const job = recruiterJobs.find(j => j.jobId === jobId);
+  if (!job) return;
+
+  const titleEl = document.getElementById('view-job-title');
+  const bodyEl = document.getElementById('view-job-body');
+  if (titleEl) titleEl.textContent = `${job.title} — ${job.company}`;
+
+  let mandatoryHtml = '';
+  let preferredHtml = '';
+
+  if (job.jobSkills && job.jobSkills.length > 0) {
+    const mand = job.jobSkills.filter(s => s.mandatory);
+    const pref = job.jobSkills.filter(s => !s.mandatory);
+
+    mandatoryHtml = mand.length > 0 
+      ? mand.map(s => `<span class="badge" style="background: #fee2e2; color: #991b1b; margin: 3px;">🔴 ${s.skillName} (${s.minYearsRequired}y+ req)</span>`).join('')
+      : '<span class="text-muted">None specified</span>';
+
+    preferredHtml = pref.length > 0
+      ? pref.map(s => `<span class="badge" style="background: #e0f2fe; color: #0369a1; margin: 3px;">🔵 ${s.skillName}</span>`).join('')
+      : '<span class="text-muted">None specified</span>';
+  } else if (job.skillsRequired) {
+    mandatoryHtml = job.skillsRequired.split(',').map(s => `<span class="badge" style="background: #fee2e2; color: #991b1b; margin: 3px;">${s.trim()}</span>`).join('');
+    preferredHtml = '<span class="text-muted">None</span>';
+  }
+
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div style="margin-bottom: 1rem;">
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <span class="badge" style="background: #f1f5f9; color: #334155;">📍 ${job.location || 'Remote'}</span>
+          <span class="badge" style="background: #f1f5f9; color: #334155;">💼 ${job.jobType || 'Full Time'}</span>
+          <span class="badge" style="background: #f1f5f9; color: #334155;">💰 ${job.salaryRange || 'Competitive'}</span>
+          <span class="badge" style="background: #f1f5f9; color: #334155;">⏳ Min Exp: ${job.minExperienceYears || 0} Yrs</span>
+        </div>
+        <p style="font-size: 0.9rem; color: #334155; line-height: 1.5; white-space: pre-line;">${job.description}</p>
+      </div>
+      <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+        <h4 style="font-size: 0.9rem; color: #991b1b; margin-bottom: 0.4rem;">Mandatory Skill Prerequisites:</h4>
+        <div>${mandatoryHtml}</div>
+      </div>
+      <div style="margin-top: 0.75rem;">
+        <h4 style="font-size: 0.9rem; color: #0369a1; margin-bottom: 0.4rem;">Preferred / Bonus Skills:</h4>
+        <div>${preferredHtml}</div>
+      </div>
+    `;
+  }
+
+  openModal('view-job-modal');
 }
 
 async function toggleJobStatus(jobId, currentStatus) {
@@ -339,6 +546,8 @@ async function loadCandidatesPage() {
 
     if (jobFilterSelect) jobFilterSelect.addEventListener('change', fetchAndRenderCandidates);
     if (statusFilterSelect) statusFilterSelect.addEventListener('change', fetchAndRenderCandidates);
+    const sortSelect = document.getElementById('candidate-sort-match');
+    if (sortSelect) sortSelect.addEventListener('change', fetchAndRenderCandidates);
 
     // Schedule Interview Form Listener
     const interviewForm = document.getElementById('schedule-interview-form');
@@ -357,10 +566,12 @@ async function fetchAndRenderCandidates() {
 
   const jobId = document.getElementById('candidate-filter-job')?.value || '';
   const status = document.getElementById('candidate-filter-status')?.value || '';
+  const sortOrder = document.getElementById('candidate-sort-match')?.value || 'match';
 
   let query = [];
   if (jobId) query.push(`jobId=${jobId}`);
   if (status) query.push(`status=${encodeURIComponent(status)}`);
+  if (sortOrder) query.push(`sortBy=${encodeURIComponent(sortOrder)}`);
   const queryString = query.length > 0 ? '?' + query.join('&') : '';
 
   try {
@@ -369,56 +580,103 @@ async function fetchAndRenderCandidates() {
       allApplications = res.data;
 
       if (allApplications.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 2.5rem;">No candidates matching criteria.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding: 2.5rem;">No candidates matching criteria.</td></tr>';
         return;
       }
 
-      tbody.innerHTML = allApplications.map(a => `
-        <tr>
-          <td>
-            <strong>${a.applicantName}</strong><br>
-            <span style="font-size: 0.8rem; color: #64748b;">${a.applicantEmail}</span><br>
-            <span style="font-size: 0.78rem; color: #94a3b8;">📞 ${a.applicantPhone || 'N/A'}</span>
+      tbody.innerHTML = allApplications.map((a, idx) => {
+        const rank = a.rank || (idx + 1);
+        let rankBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #475569; font-weight: 700; font-size: 0.88rem;">#${rank}</span>`;
+        if (rank === 1) {
+          rankBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #d97706); color: #fff; font-weight: 800; font-size: 0.95rem; box-shadow: 0 2px 8px rgba(217,119,6,0.4);" title="Top Candidate">🥇1</span>`;
+        } else if (rank === 2) {
+          rankBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; font-weight: 800; font-size: 0.9rem; box-shadow: 0 2px 6px rgba(100,116,139,0.3);" title="Rank #2">🥈2</span>`;
+        } else if (rank === 3) {
+          rankBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #d97706, #b45309); color: #fff; font-weight: 800; font-size: 0.9rem; box-shadow: 0 2px 6px rgba(180,83,9,0.3);" title="Rank #3">🥉3</span>`;
+        }
+
+        return `
+        <tr style="${rank === 1 ? 'background: #fffbeb;' : ''}">
+          <td style="text-align: center; vertical-align: middle;">
+            ${rankBadge}
           </td>
-          <td><strong>${a.jobTitle}</strong></td>
           <td>
-            <div style="font-size: 0.85rem; max-width: 200px;">
-              <div><strong>Exp:</strong> ${a.applicantExperience || 0} Yrs</div>
-              <div class="text-muted" style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${a.applicantSkills || ''}">
-                ${a.applicantSkills || 'None listed'}
+            <strong>${a.candidateName || a.applicantName}</strong><br>
+            <span style="font-size: 0.8rem; color: #64748b;">${a.candidateEmail || a.applicantEmail}</span><br>
+            <span style="font-size: 0.78rem; color: #94a3b8;">📞 ${a.candidatePhone || a.applicantPhone || 'N/A'}</span>
+            ${a.candidateCity ? `<div style="font-size: 0.75rem; color: #64748b;">📍 ${a.candidateCity}, ${a.candidateCountry || ''}</div>` : ''}
+          </td>
+          <td>
+            <strong>${a.jobTitle}</strong><br>
+            <span style="font-size: 0.8rem; color: #64748b;">${a.companyName || a.company || 'Enterprise'}</span>
+          </td>
+          <td>
+            <div style="margin-bottom: 4px;">
+              ${renderMatchBadge(a.matchScore, a.matchLevel)}
+            </div>
+            ${a.rankingInsight ? `
+              <div style="font-size: 0.76rem; color: #1e3a8a; font-weight: 600; margin-bottom: 4px; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">
+                ${a.rankingInsight}
               </div>
+            ` : ''}
+            <div style="font-size: 0.82rem; max-width: 250px;">
+              <div><strong>Exp:</strong> ${a.candidateExperienceYears !== undefined ? a.candidateExperienceYears : (a.applicantExperience || 0)} Yrs</div>
+              ${a.matchedSkills && a.matchedSkills.length > 0 ? `
+                <div style="margin-top: 3px;">
+                  ${a.matchedSkills.slice(0, 3).map(s => `<span class="badge skill-tag-matched" style="font-size: 0.72rem; padding: 1px 6px; margin-right: 2px;">✓ ${s}</span>`).join('')}
+                </div>
+              ` : ''}
+              ${a.missingMandatorySkills && a.missingMandatorySkills.length > 0 ? `
+                <div style="margin-top: 2px;">
+                  ${a.missingMandatorySkills.slice(0, 2).map(s => `<span class="badge skill-tag-missing" style="font-size: 0.72rem; padding: 1px 6px; margin-right: 2px; background: #fef2f2; color: #dc2626;">✕ ${s}</span>`).join('')}
+                </div>
+              ` : ''}
             </div>
           </td>
-          <td>${formatDate(a.appliedDate)}</td>
+          <td>${formatDate(a.appliedAt || a.appliedDate)}</td>
           <td>
             <select onchange="updateCandidateStatus(${a.applicationId}, this.value)" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.85rem; font-weight: 600; width: auto;">
-              <option value="Applied" ${a.status === 'Applied' ? 'selected' : ''}>Applied</option>
-              <option value="Under Review" ${a.status === 'Under Review' ? 'selected' : ''}>Under Review</option>
-              <option value="Shortlisted" ${a.status === 'Shortlisted' ? 'selected' : ''}>Shortlisted</option>
-              <option value="Interview Scheduled" ${a.status === 'Interview Scheduled' ? 'selected' : ''}>Interview Scheduled</option>
-              <option value="Selected" ${a.status === 'Selected' ? 'selected' : ''}>Selected</option>
-              <option value="Rejected" ${a.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+              <option value="Applied" ${(a.status === 'Applied') ? 'selected' : ''}>Applied</option>
+              <option value="Under Review" ${(a.status === 'Under Review' || a.status === 'Under_Review') ? 'selected' : ''}>Under Review</option>
+              <option value="Shortlisted" ${(a.status === 'Shortlisted') ? 'selected' : ''}>Shortlisted</option>
+              <option value="Interview Scheduled" ${(a.status === 'Interview Scheduled' || a.status === 'Interview_Scheduled') ? 'selected' : ''}>Interview Scheduled</option>
+              <option value="Selected" ${(a.status === 'Selected') ? 'selected' : ''}>Selected</option>
+              <option value="Rejected" ${(a.status === 'Rejected') ? 'selected' : ''}>Rejected</option>
             </select>
           </td>
           <td>
-            ${a.resumePath ? `
-              <a href="/uploads/resumes/${a.resumePath}" target="_blank" class="btn btn-outline btn-sm">
+            ${(a.resumePath || a.resumeFileName) ? `
+              <a href="/uploads/resumes/${a.resumePath || a.resumeFileName}" target="_blank" class="btn btn-outline btn-sm">
                 📄 Resume
               </a>
             ` : '<span class="text-muted" style="font-size: 0.8rem;">No file</span>'}
           </td>
           <td>
-            <div class="flex gap-1">
-              <button onclick="openCandidateProfileModal(${a.applicantId}, ${a.applicationId})" class="btn btn-secondary btn-sm">Profile</button>
-              <button onclick="openScheduleModal(${a.applicationId}, '${encodeURIComponent(a.applicantName)}', '${encodeURIComponent(a.jobTitle)}')" class="btn btn-primary btn-sm" title="Schedule Interview">📅 Interview</button>
+            <div class="flex gap-1" style="flex-wrap: wrap;">
+              <button onclick="openCandidateProfileModal(${a.candidateId || a.applicantId}, ${a.applicationId})" class="btn btn-secondary btn-sm" title="View Full Candidate Profile">Profile</button>
+              ${a.status !== 'Shortlisted' ? `
+                <button onclick="quickUpdateStatus(${a.applicationId}, 'Shortlisted')" class="btn btn-sm" style="background: #2563eb; color: #fff;" title="1-Click Shortlist">⭐ Shortlist</button>
+              ` : ''}
+              ${(a.status === 'Interview Scheduled' || a.status === 'Interview_Scheduled') ? `
+                <a href="../interview-room.html" class="btn btn-sm btn-primary" style="background: #10b981; border-color: #10b981;" title="Open Virtual Interview Room">
+                  💻 Room
+                </a>
+              ` : `
+                <button onclick="openScheduleModal(${a.applicationId}, '${encodeURIComponent(a.candidateName || a.applicantName)}', '${encodeURIComponent(a.jobTitle)}')" class="btn btn-primary btn-sm" title="Schedule Interview">📅 Interview</button>
+              `}
             </div>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     }
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to fetch candidates.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to fetch candidates: ' + err.message + '</td></tr>';
   }
+}
+
+async function quickUpdateStatus(applicationId, newStatus) {
+  await updateCandidateStatus(applicationId, newStatus);
+  await fetchAndRenderCandidates();
 }
 
 async function updateCandidateStatus(applicationId, newStatus) {
@@ -474,6 +732,45 @@ async function openCandidateProfileModal(applicantId, applicationId) {
           <h4 class="mb-1">Skills</h4>
           <div class="job-skills">${skills}</div>
         </div>
+
+        ${app ? `
+          <div class="mb-3" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1rem; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="margin: 0; color: #166534;">Smart Match Compatibility Breakdown</h4>
+              <span style="font-size: 1.1rem; font-weight: 800; color: #15803d;">${app.matchScore || 0}% (${app.matchLevel || 'MODERATE'})</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 0.5rem;">
+              ${app.rankingInsight || ''}
+            </div>
+            <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr); gap: 0.5rem; text-align: center;">
+              <div style="background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px solid #dcfce7;">
+                <div style="font-size: 0.72rem; color: #64748b;">Skills (45%)</div>
+                <div style="font-weight: 700; color: #0f172a;">${app.skillScore || 0}%</div>
+              </div>
+              <div style="background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px solid #dcfce7;">
+                <div style="font-size: 0.72rem; color: #64748b;">Exp (20%)</div>
+                <div style="font-weight: 700; color: #0f172a;">${app.experienceScore || 0}%</div>
+              </div>
+              <div style="background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px solid #dcfce7;">
+                <div style="font-size: 0.72rem; color: #64748b;">Edu (10%)</div>
+                <div style="font-weight: 700; color: #0f172a;">${app.educationScore || 0}%</div>
+              </div>
+              <div style="background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px solid #dcfce7;">
+                <div style="font-size: 0.72rem; color: #64748b;">Proj (10%)</div>
+                <div style="font-weight: 700; color: #0f172a;">${app.projectScore || 0}%</div>
+              </div>
+              <div style="background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px solid #dcfce7;">
+                <div style="font-size: 0.72rem; color: #64748b;">Assess (15%)</div>
+                <div style="font-weight: 700; color: #0f172a;">${app.assessmentScore || 0}%</div>
+              </div>
+            </div>
+            ${app.missingMandatorySkills && app.missingMandatorySkills.length > 0 ? `
+              <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #b91c1c;">
+                <strong>Missing Mandatory Prerequisites:</strong> ${app.missingMandatorySkills.join(', ')}
+              </div>
+            ` : '<div style="margin-top: 0.5rem; font-size: 0.8rem; color: #15803d;">✓ All mandatory job requirements satisfied</div>'}
+          </div>
+        ` : ''}
 
         ${app && app.coverLetter ? `
           <div class="mb-3" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -673,4 +970,15 @@ async function markAllRecruiterNotifsRead() {
     loadRecruiterNotifications();
     fetchUnreadNotificationsCount();
   } catch (err) {}
+}
+
+function renderMatchBadge(score, level) {
+  if (score === undefined || score === null) return '';
+  const lvl = (level || 'MODERATE').toLowerCase();
+  return `
+    <span class="match-badge ${lvl}">
+      <span class="match-badge-dot"></span>
+      ${score}% Match (${level || 'Good'})
+    </span>
+  `;
 }

@@ -36,6 +36,7 @@ public class Server {
         httpServer = HttpServer.create(new InetSocketAddress(port), 0);
 
         // Register API REST endpoints
+        httpServer.createContext("/api/health", new HealthHandler());
         httpServer.createContext("/api/login", new LoginHandler());
         httpServer.createContext("/api/logout", new LoginHandler());
         httpServer.createContext("/api/session", new LoginHandler());
@@ -44,8 +45,17 @@ public class Server {
         httpServer.createContext("/api/applications", new ApplicationHandler(uploadsDir));
         httpServer.createContext("/api/recruiter", new RecruiterHandler());
         httpServer.createContext("/api/applicant", new ApplicantHandler(uploadsDir));
+        httpServer.createContext("/api/candidate", new CandidateHandler(uploadsDir));
         httpServer.createContext("/api/interviews", new InterviewHandler());
         httpServer.createContext("/api/notifications", new NotificationHandler());
+        httpServer.createContext("/api/verify-email", new EmailVerificationHandler());
+        httpServer.createContext("/api/admin", new AdminHandler());
+        httpServer.createContext("/api/companies", new CompanyHandler());
+        httpServer.createContext("/api/match", new MatchHandler());
+        httpServer.createContext("/api/skill-gap", new SkillGapHandler());
+        httpServer.createContext("/api/assessments", new AssessmentHandler());
+        httpServer.createContext("/api/career-paths", new CareerPathHandler());
+        httpServer.createContext("/api/career-path", new CareerPathHandler());
 
         // Register static file handler for frontend and uploaded files
         httpServer.createContext("/", new StaticFileHandler(frontendDir, uploadsDir));

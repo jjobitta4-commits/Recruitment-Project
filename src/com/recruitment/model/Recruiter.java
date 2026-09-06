@@ -4,11 +4,14 @@ import java.sql.Timestamp;
 
 /**
  * Model class representing a Recruiter's profile.
+ * Aligned with normalized MySQL 'recruiters', 'companies', and 'users' tables.
  */
 public class Recruiter {
     private int recruiterId;
     private int userId;
+    private int companyId;
     private String recruiterName;
+    private String designation;
     private String companyName;
     private String companyDescription;
     private String phone;
@@ -34,12 +37,28 @@ public class Recruiter {
         this.userId = userId;
     }
 
+    public int getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(int companyId) {
+        this.companyId = companyId;
+    }
+
     public String getRecruiterName() {
         return recruiterName;
     }
 
     public void setRecruiterName(String recruiterName) {
         this.recruiterName = recruiterName;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
     }
 
     public String getCompanyName() {

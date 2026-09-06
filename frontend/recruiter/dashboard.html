@@ -104,6 +104,41 @@
         </div>
       </div>
 
+      <!-- Enterprise Candidate Pipeline Funnel -->
+      <div class="card mb-3" style="background: var(--surface); border: 1px solid var(--border);">
+        <div class="flex justify-between items-center mb-3" style="flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem;">Hiring Conversion Funnel & Analytics</h3>
+            <p class="text-muted" style="font-size: 0.85rem;">Pipeline progression from application intake to final hire</p>
+          </div>
+          <a href="../interview-room.html" class="btn btn-sm btn-primary" style="background: #10b981; border-color: #10b981;">
+            💻 Launch Virtual Interview Room
+          </a>
+        </div>
+        <div id="recruiter-funnel-container" class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+          <div style="background: #eff6ff; padding: 1rem; border-radius: 8px; border: 1px solid #bfdbfe;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #1e40af; text-transform: uppercase;">1. Intake</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #1e3a8a;" id="funnel-intake">0</div>
+            <div style="font-size: 0.75rem; color: #3b82f6;">Total Applications</div>
+          </div>
+          <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border: 1px solid #bbf7d0;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #166534; text-transform: uppercase;">2. Screened</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #14532d;" id="funnel-screened">0</div>
+            <div style="font-size: 0.75rem; color: #22c55e;">Shortlisted / Passed</div>
+          </div>
+          <div style="background: #fdf4ff; padding: 1rem; border-radius: 8px; border: 1px solid #f5d0fe;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #86198f; text-transform: uppercase;">3. Interviewing</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #701a75;" id="funnel-interviewing">0</div>
+            <div style="font-size: 0.75rem; color: #a855f7;">In Technical Rounds</div>
+          </div>
+          <div style="background: #fefce8; padding: 1rem; border-radius: 8px; border: 1px solid #fef08a;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #854d0e; text-transform: uppercase;">4. Hired</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #713f12;" id="funnel-hired">0</div>
+            <div style="font-size: 0.75rem; color: #eab308;">Offers Extended</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Applicant Submissions -->
       <div class="card mb-3">
         <div class="card-header">

@@ -1,10 +1,12 @@
 package com.recruitment.server;
 
 import com.recruitment.dao.ApplicantDAO;
+import com.recruitment.dao.CandidateDAO;
 import com.recruitment.dao.NotificationDAO;
 import com.recruitment.dao.RecruiterDAO;
 import com.recruitment.dao.UserDAO;
 import com.recruitment.model.Applicant;
+import com.recruitment.model.Candidate;
 import com.recruitment.model.Recruiter;
 import com.recruitment.util.*;
 import com.sun.net.httpserver.HttpExchange;
@@ -25,6 +27,7 @@ public class RegisterHandler implements HttpHandler {
 
     private final UserDAO userDAO = new UserDAO();
     private final ApplicantDAO applicantDAO = new ApplicantDAO();
+    private final CandidateDAO candidateDAO = new CandidateDAO();
     private final RecruiterDAO recruiterDAO = new RecruiterDAO();
     private final NotificationDAO notificationDAO = new NotificationDAO();
     private final String uploadsDir;
@@ -99,6 +102,22 @@ public class RegisterHandler implements HttpHandler {
                 return;
             }
 
+            // Enforce admin exclusivity: Admin role cannot be self-registered and is locked to admin@recruithub.com
+            if ("admin".equalsIgnoreCase(role)) {
+                ResponseHelper.sendError(exchange, 403, "Administrator accounts cannot be self-registered. The admin role is restricted exclusively to admin@recruithub.com.");
+                return;
+            }
+
+            if ("admin@recruithub.com".equalsIgnoreCase(email)) {
+                ResponseHelper.sendError(exchange, 400, "The email 'admin@recruithub.com' is exclusively reserved for the platform administrator.");
+                return;
+            }
+
+            if (!"candidate".equalsIgnoreCase(role) && !"applicant".equalsIgnoreCase(role) && !"recruiter".equalsIgnoreCase(role)) {
+                ResponseHelper.sendError(exchange, 400, "Invalid registration role. Only 'candidate' and 'recruiter' roles are permitted.");
+                return;
+            }
+
             // Register User
             int userId = userDAO.registerUser(email, password, role);
             if (userId <= 0) {
@@ -106,7 +125,7 @@ public class RegisterHandler implements HttpHandler {
                 return;
             }
 
-            if ("applicant".equalsIgnoreCase(role)) {
+            if ("applicant".equalsIgnoreCase(role) || "candidate".equalsIgnoreCase(role)) {
                 Applicant ap = new Applicant();
                 ap.setUserId(userId);
                 ap.setFullName(JSONUtil.getString(fields, "fullName", "Applicant"));
@@ -133,12 +152,26 @@ public class RegisterHandler implements HttpHandler {
                     return;
                 }
 
+                // Provision normalized candidate profile
+                Candidate cand = new Candidate();
+                cand.setUserId(userId);
+                cand.setFullName(ap.getFullName());
+                cand.setPhone(ap.getPhone());
+                cand.setDob(ap.getDob());
+                cand.setGender(ap.getGender());
+                cand.setAddress(ap.getAddress());
+                cand.setCity(ap.getCity());
+                cand.setCountry(ap.getCountry());
+                cand.setBio("");
+                cand.setProfileCompletion(20);
+                candidateDAO.createCandidate(cand);
+
                 // Send welcome notification
                 notificationDAO.createNotification(userId, "Welcome to Recruitment Portal",
                         "Your applicant account has been created successfully! Complete your profile and browse open vacancies.");
 
                 SessionManager.UserSession session = SessionManager.createSession(
-                        userId, email, role, ap.getApplicantId(), null);
+                        userId, email, role, ap.getApplicantId(), null, cand.getCandidateId());
 
                 Map<String, Object> resp = new LinkedHashMap<>();
                 resp.put("token", session.getToken());
@@ -147,6 +180,7 @@ public class RegisterHandler implements HttpHandler {
                 resp.put("role", role);
                 resp.put("name", ap.getFullName());
                 resp.put("applicantId", ap.getApplicantId());
+                resp.put("candidateId", cand.getCandidateId());
 
                 ResponseHelper.sendSuccess(exchange, "Applicant registered successfully!", resp);
 

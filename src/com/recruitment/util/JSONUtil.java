@@ -132,13 +132,19 @@ public class JSONUtil {
      * Parses a JSON string representing an object into a Map<String, Object>.
      */
     public static Map<String, Object> parseObject(String json) {
-        if (json == null || json.trim().isEmpty()) {
+        if (json == null) {
             return new HashMap<>();
         }
         json = json.trim();
-        if (!json.startsWith("{") || !json.endsWith("}")) {
+        if (json.startsWith("\uFEFF")) {
+            json = json.substring(1).trim();
+        }
+        int start = json.indexOf('{');
+        int end = json.lastIndexOf('}');
+        if (start == -1 || end == -1 || start >= end) {
             return new HashMap<>();
         }
+        json = json.substring(start, end + 1);
         Tokenizer tokenizer = new Tokenizer(json);
         Object res = tokenizer.parseValue();
         if (res instanceof Map) {

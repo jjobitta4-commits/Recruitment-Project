@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Vacancy Moderation — Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .filter-tab-btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .filter-tab-btn.active {
+      background: #8b5cf6;
+      color: #fff;
+      border-color: #8b5cf6;
+    }
+    .skill-mini-chip {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 2px;
+    }
+    .skill-mini-chip.mandatory {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .skill-mini-chip.preferred {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .status-badge-pending {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-badge-approved {
+      background: #dcfce7;
+      color: #166534;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-badge-rejected {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Navigation -->
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="dashboard.html" class="nav-brand">
+          <div class="brand-badge" style="background: #8b5cf6;">A</div>
+          <span>SmartRecruit <small style="font-size: 0.75rem; color: #a78bfa; font-weight: 600;">[ADMIN]</small></span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="dashboard.html">System Overview</a></li>
+          <li><a href="jobs.html" class="active">Job Moderation</a></li>
+          <li><a href="../jobs.html" target="_blank">Candidate Portal ↗</a></li>
+        </ul>
+        <div class="nav-actions">
+          <span class="user-greeting" id="admin-user-greeting">Administrator</span>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Log Out</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <main class="container py-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4" style="flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem;">Job Vacancy Moderation</h1>
+        <p class="text-muted">Review recruiter-submitted openings, inspect required skill criteria, and approve or reject vacancies before candidate exposure.</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminJobs()">🔄 Refresh Postings</button>
+    </div>
+
+    <!-- Moderation Metrics -->
+    <div class="stats-grid mb-4">
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div>
+          <div class="stat-val" id="stat-mod-total">0</div>
+          <div class="stat-label">Total Job Postings</div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-icon">⏳</div>
+        <div>
+          <div class="stat-val" id="stat-mod-pending" style="color: #d97706;">0</div>
+          <div class="stat-label">Pending Approval</div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-left: 4px solid #10b981;">
+        <div class="stat-icon">✅</div>
+        <div>
+          <div class="stat-val" id="stat-mod-approved" style="color: #059669;">0</div>
+          <div class="stat-label">Approved &amp; Live</div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-left: 4px solid #ef4444;">
+        <div class="stat-icon">🚫</div>
+        <div>
+          <div class="stat-val" id="stat-mod-rejected" style="color: #dc2626;">0</div>
+          <div class="stat-label">Rejected Openings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tab Bar -->
+    <div class="flex justify-between items-center mb-3" style="flex-wrap: wrap; gap: 1rem;">
+      <div class="flex gap-1" id="filter-tabs">
+        <button class="filter-tab-btn active" data-filter="pending" onclick="setAdminJobFilter('pending')">⏳ Pending Review</button>
+        <button class="filter-tab-btn" data-filter="all" onclick="setAdminJobFilter('all')">📋 All Postings</button>
+        <button class="filter-tab-btn" data-filter="approved" onclick="setAdminJobFilter('approved')">✅ Approved</button>
+        <button class="filter-tab-btn" data-filter="rejected" onclick="setAdminJobFilter('rejected')">🚫 Rejected</button>
+      </div>
+      <div style="min-width: 260px;">
+        <input type="text" id="admin-job-search" class="form-control" placeholder="Search by title, company, or recruiter..." oninput="filterAdminJobsTable()">
+      </div>
+    </div>
+
+    <!-- Jobs Moderation Table -->
+    <div class="card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">ID</th>
+              <th>Role &amp; Hiring Company</th>
+              <th>Recruiter</th>
+              <th>Skills Breakdown</th>
+              <th>Type &amp; Exp</th>
+              <th>Moderation</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-jobs-tbody">
+            <tr><td colspan="7" class="text-center text-muted" style="padding: 2.5rem;">Loading job vacancies...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/admin-jobs.js"></script>
+</body>
+</html>

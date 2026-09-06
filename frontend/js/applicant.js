@@ -35,29 +35,102 @@ async function loadApplicantDashboard() {
     welcomeEl.textContent = user.name || user.email;
   }
 
+  // Fetch all widgets concurrently using Promise.allSettled so an issue in one never blocks the others
+  const [statsSettled, appsSettled, notifsSettled] = await Promise.allSettled([
+    authFetch('/api/applicant/stats'),
+    authFetch('/api/applications'),
+    authFetch('/api/notifications')
+  ]);
+
+  // 1. Overview Stats
+  if (statsSettled.status === 'fulfilled' && statsSettled.value && statsSettled.value.success && statsSettled.value.data) {
+    const s = statsSettled.value.data;
+    const totalEl = document.getElementById('stat-total-apps');
+    const shortEl = document.getElementById('stat-shortlisted');
+    const selEl = document.getElementById('stat-selected');
+    const ivsEl = document.getElementById('stat-interviews');
+    if (totalEl) totalEl.textContent = s.totalApplications ?? 0;
+    if (shortEl) shortEl.textContent = s.shortlistedCount ?? 0;
+    if (selEl) selEl.textContent = s.selectedCount ?? 0;
+    if (ivsEl) ivsEl.textContent = s.interviewsCount ?? 0;
+  }
+
+  // 2. Recent Applications
+  if (appsSettled.status === 'fulfilled' && appsSettled.value && appsSettled.value.success && Array.isArray(appsSettled.value.data)) {
+    renderRecentApplications(appsSettled.value.data.slice(0, 5));
+  } else {
+    const tbody = document.getElementById('recent-applications-tbody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding: 1.5rem;">You have not applied for any jobs yet. <a href="../jobs.html" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">Browse Jobs</a></td></tr>';
+    }
+  }
+
+  // 3. Recent Notifications
+  if (notifsSettled.status === 'fulfilled' && notifsSettled.value && notifsSettled.value.success && notifsSettled.value.data) {
+    renderRecentNotifications(notifsSettled.value.data.notifications ? notifsSettled.value.data.notifications.slice(0, 4) : []);
+  } else {
+    const notifsContainer = document.getElementById('recent-notifications-list');
+    if (notifsContainer) {
+      notifsContainer.innerHTML = '<p class="text-muted text-center" style="padding: 1rem;">No recent notifications.</p>';
+    }
+  }
+
+  // 4. Smart Matched Vacancies
+  loadRecommendedMatches();
+}
+
+async function loadRecommendedMatches() {
+  const tbody = document.getElementById('recommended-matches-tbody');
+  if (!tbody) return;
+
   try {
-    const [statsRes, appsRes, notifsRes] = await Promise.all([
-      authFetch('/api/applicant/stats'),
-      authFetch('/api/applications'),
-      authFetch('/api/notifications')
-    ]);
+    const res = await authFetch('/api/match?action=ranked-jobs');
+    if (res && res.success && Array.isArray(res.data)) {
+      const jobs = res.data.slice(0, 5);
+      if (jobs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 1.5rem;">No recommendations generated yet. Complete your profile and skills to boost algorithmic matches! <a href="profile.html" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">Update Profile</a></td></tr>';
+        return;
+      }
 
-    if (statsRes.success && statsRes.data) {
-      document.getElementById('stat-total-apps').textContent = statsRes.data.totalApplications || 0;
-      document.getElementById('stat-shortlisted').textContent = statsRes.data.shortlistedCount || 0;
-      document.getElementById('stat-selected').textContent = statsRes.data.selectedCount || 0;
-      document.getElementById('stat-interviews').textContent = statsRes.data.interviewsCount || 0;
-    }
+      tbody.innerHTML = jobs.map(j => {
+        const score = j.matchScore || 0;
+        let badgeStyle = 'background: #dcfce7; color: #166534;';
+        if (score < 50) badgeStyle = 'background: #fee2e2; color: #991b1b;';
+        else if (score < 70) badgeStyle = 'background: #fef3c7; color: #92400e;';
+        else if (score < 85) badgeStyle = 'background: #e0f2fe; color: #0369a1;';
 
-    if (appsRes.success && Array.isArray(appsRes.data)) {
-      renderRecentApplications(appsRes.data.slice(0, 5));
-    }
-
-    if (notifsRes.success && notifsRes.data) {
-      renderRecentNotifications(notifsRes.data.notifications ? notifsRes.data.notifications.slice(0, 4) : []);
+        return `
+          <tr>
+            <td>
+              <strong style="font-size: 0.95rem; color: #0f172a;">${j.title}</strong><br>
+              <span style="font-size: 0.8rem; color: #64748b;">🏢 ${j.company}</span>
+            </td>
+            <td>
+              <span class="badge" style="${badgeStyle} font-weight: 800; font-size: 0.85rem;">
+                ⭐ ${score}% &bull; ${j.matchLevel || 'MATCH'}
+              </span>
+            </td>
+            <td>
+              📍 ${j.location || 'Remote'}<br>
+              <small style="color: #64748b;">💼 ${j.jobType || 'Full Time'}</small>
+            </td>
+            <td>
+              <div class="flex gap-1">
+                <button onclick="openSkillGapModal(${j.jobId})" class="btn btn-outline btn-sm" style="border-color: #8b5cf6; color: #7c3aed;">
+                  📊 Skill Gap &amp; Roadmap
+                </button>
+                <a href="../jobs.html" class="btn btn-primary btn-sm">Apply</a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 1.5rem;">Explore all available vacancies in the jobs catalog. <a href="../jobs.html" class="btn btn-primary btn-sm" style="margin-left: 0.5rem;">Explore Jobs</a></td></tr>';
     }
   } catch (err) {
-    console.error('Failed to load dashboard data:', err);
+    console.error('Failed to load recommended matches:', err);
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 1.5rem;">Explore all available vacancies in the jobs catalog. <a href="../jobs.html" class="btn btn-primary btn-sm" style="margin-left: 0.5rem;">Explore Jobs</a></td></tr>';
   }
 }
 
@@ -65,8 +138,8 @@ function renderRecentApplications(apps) {
   const tbody = document.getElementById('recent-applications-tbody');
   if (!tbody) return;
 
-  if (apps.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">You have not applied for any jobs yet. <a href="/jobs.html">Browse Jobs</a></td></tr>';
+  if (!apps || apps.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding: 1.5rem;">You have not applied for any jobs yet. <a href="../jobs.html" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">Browse Jobs</a></td></tr>';
     return;
   }
 
@@ -77,7 +150,7 @@ function renderRecentApplications(apps) {
       <td>${formatDate(a.appliedDate)}</td>
       <td>${getStatusBadge(a.status)}</td>
       <td>
-        <a href="/applicant/applications.html" class="btn btn-secondary btn-sm">View Details</a>
+        <a href="applications.html" class="btn btn-secondary btn-sm">View Details</a>
       </td>
     </tr>
   `).join('');
@@ -245,7 +318,8 @@ async function handleUploadResume(e) {
   }
 
   try {
-    const res = await fetch('/api/applicant/resume', {
+    const resumeUrl = typeof apiEndpoint === 'function' ? apiEndpoint('/api/applicant/resume') : '/api/applicant/resume';
+    const res = await fetch(resumeUrl, {
       method: 'POST',
       headers: {
         'X-Session-Token': Auth.getToken(),
@@ -281,28 +355,82 @@ async function loadApplicantApplications() {
     const res = await authFetch('/api/applications');
     if (res.success && Array.isArray(res.data)) {
       if (res.data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding: 2.5rem;">No submitted applications yet. <a href="/jobs.html">Search Jobs</a></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding: 2.5rem;">No submitted applications yet. <a href="../jobs.html" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">Search Jobs</a></td></tr>';
         return;
       }
 
-      tbody.innerHTML = res.data.map(a => `
+      tbody.innerHTML = res.data.map(a => {
+        const isInterview = a.status === 'Interview Scheduled' || a.status === 'Interview_Scheduled';
+        const canWithdraw = a.status === 'Applied' || a.status === 'Under Review' || a.status === 'Under_Review';
+        return `
         <tr>
-          <td><strong>${a.jobTitle}</strong></td>
+          <td>
+            <strong>${a.jobTitle}</strong>
+            ${a.matchScore ? `<div style="margin-top: 4px;">${renderApplicantMatchBadge(a.matchScore, a.matchLevel)}</div>` : ''}
+          </td>
           <td>🏢 ${a.company}</td>
           <td>📍 ${a.jobLocation || 'Remote'}</td>
           <td>${formatDate(a.appliedDate)}</td>
           <td>${getStatusBadge(a.status)}</td>
           <td>
             <div class="flex gap-1">
+              ${isInterview ? `
+                <a href="../interview-room.html" class="btn btn-sm btn-primary" style="background: #10b981; border-color: #10b981;" title="Join Virtual Technical Room">
+                  💻 Room
+                </a>
+              ` : ''}
+              ${canWithdraw ? `
+                <button onclick="withdrawApplication(${a.applicationId}, '${encodeURIComponent(a.jobTitle)}')" class="btn btn-sm" style="background: #fff; color: #ef4444; border: 1px solid #fca5a5;" title="Withdraw Application">✕ Withdraw</button>
+              ` : ''}
               ${a.resumePath ? `<a href="/uploads/resumes/${a.resumePath}" target="_blank" class="btn btn-outline btn-sm">Resume</a>` : ''}
               <button onclick="viewApplicationCoverLetter('${encodeURIComponent(a.coverLetter || '')}', '${encodeURIComponent(a.jobTitle)}', '${encodeURIComponent(a.company)}')" class="btn btn-secondary btn-sm">Cover Letter</button>
             </div>
           </td>
         </tr>
-      `).join('');
+        <tr style="background: #f8fafc;">
+          <td colspan="6" style="padding: 0.85rem 1.5rem 1.25rem; border-bottom: 2px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <span style="font-weight: 700; font-size: 0.78rem; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Hiring Pipeline Status</span>
+              ${a.matchedSkills && a.matchedSkills.length > 0 ? `
+                <span style="font-size: 0.8rem; color: #065f46;">
+                  Skill Match: ${a.matchedSkills.slice(0, 4).map(s => `<span class="badge skill-tag-matched" style="font-size: 0.72rem; padding: 1px 6px; margin-left: 3px;">✓ ${s}</span>`).join('')}
+                </span>
+              ` : ''}
+            </div>
+            ${renderPipelineStepper(a.status)}
+          </td>
+        </tr>
+      `;
+      }).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding: 2.5rem;">No applications found. <a href="../jobs.html" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">Browse Jobs</a></td></tr>';
     }
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load applications.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding: 2.5rem;">Could not load applications. <a href="../jobs.html" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">Browse Jobs</a></td></tr>';
+  }
+}
+
+async function withdrawApplication(applicationId, jobTitle) {
+  const decodedTitle = decodeURIComponent(jobTitle);
+  if (!confirm(`Are you sure you want to withdraw your application for "${decodedTitle}"? This action cannot be undone.`)) {
+    return;
+  }
+  try {
+    const res = await authFetch(`/api/applications?applicationId=${applicationId}`, {
+      method: 'DELETE'
+    });
+    if (res.success) {
+      if (typeof showToast === 'function') {
+        showToast('Application withdrawn successfully', 'success');
+      } else {
+        alert('Application withdrawn successfully');
+      }
+      loadApplicantApplications();
+    } else {
+      alert(res.message || 'Failed to withdraw application');
+    }
+  } catch (err) {
+    alert('Error withdrawing application: ' + err.message);
   }
 }
 
@@ -360,7 +488,7 @@ async function loadApplicantInterviews() {
             </div>
             <div style="background: #f8fafc; padding: 0.65rem 1rem; border-radius: 6px; border: 1px solid #e2e8f0;">
               <div class="text-muted" style="font-size: 0.78rem;">Format</div>
-              <div class="font-bold">${iv.interviewType === 'Online' ? '🌐 Online Video' : '🏢 In-Person Office'}</div>
+              <div class="font-bold">${iv.interviewType === 'Online' ? '🌐 Virtual Technical Room' : '🏢 In-Person Office'}</div>
             </div>
           </div>
 
@@ -370,16 +498,23 @@ async function loadApplicantInterviews() {
             </div>
           ` : ''}
 
-          <div class="flex justify-between items-center">
+          <div class="flex justify-between items-center" style="flex-wrap: wrap; gap: 0.5rem;">
             <div style="font-size: 0.8rem; color: #94a3b8;">Scheduled on ${formatDate(iv.createdAt)}</div>
-            ${iv.meetingLink ? `
-              <a href="${iv.meetingLink}" target="_blank" class="btn btn-primary btn-sm">
-                🔗 Join Online Meeting
+            <div class="flex gap-1">
+              <a href="../interview-room.html?id=${iv.interviewId}" class="btn btn-primary btn-sm" style="background: #10b981; border-color: #10b981;">
+                💻 Open Virtual Interview Room
               </a>
-            ` : ''}
+              ${iv.meetingLink && !iv.meetingLink.includes('interview-room') ? `
+                <a href="${iv.meetingLink}" target="_blank" class="btn btn-outline btn-sm">
+                  🔗 External Link
+                </a>
+              ` : ''}
+            </div>
           </div>
         </div>
       `).join('');
+    } else {
+      container.innerHTML = '<p class="text-muted text-center" style="padding: 2rem;">No scheduled interviews at this time.</p>';
     }
   } catch (err) {
     container.innerHTML = '<p class="text-danger text-center">Failed to load interviews.</p>';
@@ -444,4 +579,74 @@ async function markAllNotificationsRead() {
   } catch (err) {
     console.error(err);
   }
+}
+
+function renderPipelineStepper(status) {
+  const s = (status || 'Applied').toLowerCase();
+  
+  let step1Class = 'completed';
+  let step2Class = '';
+  let step3Class = '';
+  let step4Class = '';
+  let step5Class = '';
+
+  if (s === 'applied') {
+    step1Class = 'active';
+  } else if (s === 'under review') {
+    step1Class = 'completed';
+    step2Class = 'active';
+  } else if (s === 'shortlisted') {
+    step1Class = 'completed';
+    step2Class = 'completed';
+    step3Class = 'active';
+  } else if (s === 'interview scheduled') {
+    step1Class = 'completed';
+    step2Class = 'completed';
+    step3Class = 'active';
+  } else if (s === 'selected') {
+    step1Class = 'completed';
+    step2Class = 'completed';
+    step3Class = 'completed';
+    step4Class = 'completed';
+    step5Class = 'completed';
+  } else if (s === 'rejected') {
+    step1Class = 'completed';
+    step5Class = 'rejected';
+  }
+
+  return `
+    <div class="pipeline-stepper">
+      <div class="pipeline-step ${step1Class}">
+        <div class="step-circle">${step1Class === 'completed' ? '✓' : '1'}</div>
+        <div class="step-label">Applied</div>
+      </div>
+      <div class="pipeline-step ${step2Class}">
+        <div class="step-circle">${step2Class === 'completed' ? '✓' : '2'}</div>
+        <div class="step-label">Screening</div>
+      </div>
+      <div class="pipeline-step ${step3Class}">
+        <div class="step-circle">${step3Class === 'completed' ? '✓' : '3'}</div>
+        <div class="step-label">Interview</div>
+      </div>
+      <div class="pipeline-step ${step4Class}">
+        <div class="step-circle">${step4Class === 'completed' ? '✓' : '4'}</div>
+        <div class="step-label">Evaluation</div>
+      </div>
+      <div class="pipeline-step ${step5Class}">
+        <div class="step-circle">${step5Class === 'completed' ? '✓' : (step5Class === 'rejected' ? '✕' : '5')}</div>
+        <div class="step-label">${step5Class === 'rejected' ? 'Declined' : 'Decision / Offer'}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderApplicantMatchBadge(score, level) {
+  if (score === undefined || score === null || score <= 0) return '';
+  const lvl = (level || 'MODERATE').toLowerCase();
+  return `
+    <span class="match-badge ${lvl}">
+      <span class="match-badge-dot"></span>
+      ${score}% AI Match (${level || 'Good'})
+    </span>
+  `;
 }

@@ -1,9 +1,9 @@
 package com.recruitment.server;
 
-import com.recruitment.dao.JobDAO;
-import com.recruitment.dao.RecruiterDAO;
 import com.recruitment.model.Job;
 import com.recruitment.model.Recruiter;
+import com.recruitment.service.JobService;
+import com.recruitment.dao.RecruiterDAO;
 import com.recruitment.util.JSONUtil;
 import com.recruitment.util.ResponseHelper;
 import com.recruitment.util.SessionManager;
@@ -11,16 +11,19 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * HTTP Handler for Job operations (Listing, Searching, Creating, Updating, Deleting).
+ * Enhanced HTTP Handler for Job operations.
+ * Routes job queries, dual-skill posting, status updates, and deletion through JobService.
  */
 public class JobHandler implements HttpHandler {
 
-    private final JobDAO jobDAO = new JobDAO();
+    private final JobService jobService = new JobService();
     private final RecruiterDAO recruiterDAO = new RecruiterDAO();
+    private final com.recruitment.dao.ApplicantDAO applicantDAO = new com.recruitment.dao.ApplicantDAO();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -60,19 +63,28 @@ public class JobHandler implements HttpHandler {
         } catch (Exception e) {
             System.err.println("[JobHandler] Error: " + e.getMessage());
             e.printStackTrace();
-            ResponseHelper.sendError(exchange, 500, "Internal error processing job request.");
+            ResponseHelper.sendError(exchange, 500, "Internal error processing job request: " + e.getMessage());
         }
     }
 
     private void handleGetJobs(HttpExchange exchange) throws IOException {
         Map<String, String> query = ResponseHelper.parseQueryParams(exchange.getRequestURI().getRawQuery());
 
+        SessionManager.UserSession session = SessionManager.getSessionFromExchange(exchange);
+        com.recruitment.model.Applicant currentApplicant = null;
+        if (session != null && session.isApplicant()) {
+            currentApplicant = applicantDAO.getApplicantByUserId(session.getUserId());
+        }
+
         // Check if single job ID requested
         if (query.containsKey("id")) {
             try {
                 int jobId = Integer.parseInt(query.get("id"));
-                Job job = jobDAO.getJobById(jobId);
+                Job job = jobService.getJobById(jobId);
                 if (job != null) {
+                    if (currentApplicant != null) {
+                        applyMatchScores(job, currentApplicant);
+                    }
                     ResponseHelper.sendSuccess(exchange, "Job retrieved successfully", job);
                 } else {
                     ResponseHelper.sendError(exchange, 404, "Job not found.");
@@ -93,9 +105,15 @@ public class JobHandler implements HttpHandler {
 
         List<Job> jobs;
         if (keyword != null || jobType != null || country != null || location != null || skill != null || experience != null) {
-            jobs = jobDAO.searchJobs(keyword, jobType, country, location, skill, experience);
+            jobs = jobService.searchJobs(keyword, jobType, country, location, skill, experience);
         } else {
-            jobs = jobDAO.getAllActiveJobs();
+            jobs = jobService.getAllActiveJobs();
+        }
+
+        if (currentApplicant != null) {
+            for (Job j : jobs) {
+                applyMatchScores(j, currentApplicant);
+            }
         }
 
         ResponseHelper.sendSuccess(exchange, "Jobs retrieved successfully", jobs);
@@ -114,10 +132,11 @@ public class JobHandler implements HttpHandler {
             return;
         }
 
-        List<Job> jobs = jobDAO.getJobsByRecruiter(recruiterId);
+        List<Job> jobs = jobService.getJobsByRecruiter(recruiterId);
         ResponseHelper.sendSuccess(exchange, "Recruiter jobs retrieved", jobs);
     }
 
+    @SuppressWarnings("unchecked")
     private void handleCreateJob(HttpExchange exchange) throws IOException {
         SessionManager.UserSession session = SessionManager.getSessionFromExchange(exchange);
         if (session == null || !session.isRecruiter()) {
@@ -136,41 +155,53 @@ public class JobHandler implements HttpHandler {
 
         String title = JSONUtil.getString(data, "title", "").trim();
         String description = JSONUtil.getString(data, "description", "").trim();
-        String skillsRequired = JSONUtil.getString(data, "skillsRequired", "").trim();
+        String companyName = JSONUtil.getString(data, "company", "").trim();
         String jobType = JSONUtil.getString(data, "jobType", "Full Time").trim();
+        String skillsRequired = JSONUtil.getString(data, "skillsRequired", "").trim();
 
-        if (title.isEmpty() || description.isEmpty() || skillsRequired.isEmpty()) {
+        // Skill list payload: array of maps
+        List<Map<String, Object>> skillInputs = new ArrayList<>();
+        if (data.containsKey("skills") && data.get("skills") instanceof List) {
+            List<?> rawList = (List<?>) data.get("skills");
+            for (Object item : rawList) {
+                if (item instanceof Map) {
+                    skillInputs.add((Map<String, Object>) item);
+                }
+            }
+        }
+
+        if (title.isEmpty() || description.isEmpty() || (skillsRequired.isEmpty() && skillInputs.isEmpty())) {
             ResponseHelper.sendError(exchange, 400, "Job Title, Description, and Skills are required fields.");
             return;
         }
 
-        Recruiter recruiter = recruiterDAO.getRecruiterById(recruiterId);
-        String companyName = recruiter != null ? recruiter.getCompanyName() : "Company";
-
         Job job = new Job();
-        job.setRecruiterId(recruiterId);
         job.setTitle(title);
-        job.setCompany(JSONUtil.getString(data, "company", companyName));
         job.setDescription(description);
-        job.setSkillsRequired(skillsRequired);
-        job.setEducationRequired(JSONUtil.getString(data, "educationRequired", ""));
-        job.setExperienceRequired(JSONUtil.getString(data, "experienceRequired", ""));
-        job.setSalaryRange(JSONUtil.getString(data, "salaryRange", ""));
+        job.setCompany(companyName);
+        job.setCompanyId(JSONUtil.getInt(data, "companyId", 0));
         job.setJobType(jobType);
         job.setLocation(JSONUtil.getString(data, "location", ""));
         job.setCountry(JSONUtil.getString(data, "country", ""));
+        job.setSalaryRange(JSONUtil.getString(data, "salaryRange", ""));
+        job.setMinExperienceYears(JSONUtil.getInt(data, "minExperienceYears", 0));
+        job.setMinEducation(JSONUtil.getString(data, "minEducation", JSONUtil.getString(data, "educationRequired", "")));
         job.setVacancies(JSONUtil.getInt(data, "vacancies", 1));
         job.setDeadline(JSONUtil.getDateOrNull(data, "deadline"));
         job.setStatus("Active");
+        // Optional approval status parameter, default to approved or pending
+        job.setApprovalStatus(JSONUtil.getString(data, "approvalStatus", "approved"));
+        job.setSkillsRequired(skillsRequired);
 
-        boolean success = jobDAO.createJob(job);
+        boolean success = jobService.createJobPosting(job, skillInputs, recruiterId, companyName);
         if (success) {
-            ResponseHelper.sendSuccess(exchange, "Job posted successfully!", job);
+            ResponseHelper.sendSuccess(exchange, "Job opening published successfully!", job);
         } else {
             ResponseHelper.sendError(exchange, 500, "Failed to create job posting.");
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void handleUpdateJob(HttpExchange exchange) throws IOException {
         SessionManager.UserSession session = SessionManager.getSessionFromExchange(exchange);
         if (session == null || !session.isRecruiter()) {
@@ -188,38 +219,46 @@ public class JobHandler implements HttpHandler {
             return;
         }
 
-        Job existing = jobDAO.getJobById(jobId);
-        if (existing == null) {
+        Job job = jobService.getJobById(jobId);
+        if (job == null) {
             ResponseHelper.sendError(exchange, 404, "Job not found.");
             return;
         }
 
-        if (existing.getRecruiterId() != recruiterId) {
+        if (job.getRecruiterId() != recruiterId) {
             ResponseHelper.sendError(exchange, 403, "You do not have permission to modify this job posting.");
             return;
         }
 
-        existing.setTitle(JSONUtil.getString(data, "title", existing.getTitle()));
-        existing.setCompany(JSONUtil.getString(data, "company", existing.getCompany()));
-        existing.setDescription(JSONUtil.getString(data, "description", existing.getDescription()));
-        existing.setSkillsRequired(JSONUtil.getString(data, "skillsRequired", existing.getSkillsRequired()));
-        existing.setEducationRequired(JSONUtil.getString(data, "educationRequired", existing.getEducationRequired()));
-        existing.setExperienceRequired(JSONUtil.getString(data, "experienceRequired", existing.getExperienceRequired()));
-        existing.setSalaryRange(JSONUtil.getString(data, "salaryRange", existing.getSalaryRange()));
-        existing.setJobType(JSONUtil.getString(data, "jobType", existing.getJobType()));
-        existing.setLocation(JSONUtil.getString(data, "location", existing.getLocation()));
-        existing.setCountry(JSONUtil.getString(data, "country", existing.getCountry()));
-        existing.setVacancies(JSONUtil.getInt(data, "vacancies", existing.getVacancies()));
+        job.setTitle(JSONUtil.getString(data, "title", job.getTitle()));
+        job.setDescription(JSONUtil.getString(data, "description", job.getDescription()));
+        job.setJobType(JSONUtil.getString(data, "jobType", job.getJobType()));
+        job.setLocation(JSONUtil.getString(data, "location", job.getLocation()));
+        job.setCountry(JSONUtil.getString(data, "country", job.getCountry()));
+        job.setSalaryRange(JSONUtil.getString(data, "salaryRange", job.getSalaryRange()));
+        job.setMinExperienceYears(JSONUtil.getInt(data, "minExperienceYears", job.getMinExperienceYears()));
+        job.setMinEducation(JSONUtil.getString(data, "minEducation", job.getMinEducation()));
+        job.setVacancies(JSONUtil.getInt(data, "vacancies", job.getVacancies()));
         if (data.containsKey("deadline")) {
-            existing.setDeadline(JSONUtil.getDateOrNull(data, "deadline"));
+            job.setDeadline(JSONUtil.getDateOrNull(data, "deadline"));
         }
         if (data.containsKey("status")) {
-            existing.setStatus(JSONUtil.getString(data, "status", existing.getStatus()));
+            job.setStatus(JSONUtil.getString(data, "status", job.getStatus()));
         }
 
-        boolean success = jobDAO.updateJob(existing);
+        List<Map<String, Object>> skillInputs = new ArrayList<>();
+        if (data.containsKey("skills") && data.get("skills") instanceof List) {
+            List<?> rawList = (List<?>) data.get("skills");
+            for (Object item : rawList) {
+                if (item instanceof Map) {
+                    skillInputs.add((Map<String, Object>) item);
+                }
+            }
+        }
+
+        boolean success = jobService.updateJobPosting(job, skillInputs, recruiterId);
         if (success) {
-            ResponseHelper.sendSuccess(exchange, "Job updated successfully", existing);
+            ResponseHelper.sendSuccess(exchange, "Job updated successfully", job);
         } else {
             ResponseHelper.sendError(exchange, 500, "Failed to update job posting.");
         }
@@ -239,18 +278,7 @@ public class JobHandler implements HttpHandler {
         int jobId = JSONUtil.getInt(data, "jobId", 0);
         String status = JSONUtil.getString(data, "status", "Active");
 
-        Job existing = jobDAO.getJobById(jobId);
-        if (existing == null) {
-            ResponseHelper.sendError(exchange, 404, "Job not found.");
-            return;
-        }
-
-        if (existing.getRecruiterId() != recruiterId) {
-            ResponseHelper.sendError(exchange, 403, "You do not have permission to modify this job.");
-            return;
-        }
-
-        boolean success = jobDAO.updateJobStatus(jobId, status);
+        boolean success = jobService.updateJobStatus(jobId, status, recruiterId);
         if (success) {
             ResponseHelper.sendSuccess(exchange, "Job status changed to " + status);
         } else {
@@ -277,23 +305,26 @@ public class JobHandler implements HttpHandler {
             return;
         }
 
-        Job existing = jobDAO.getJobById(jobId);
-        if (existing == null) {
-            ResponseHelper.sendError(exchange, 404, "Job not found.");
-            return;
-        }
-
-        if (existing.getRecruiterId() != recruiterId) {
-            ResponseHelper.sendError(exchange, 403, "You do not have permission to delete this job.");
-            return;
-        }
-
-        boolean success = jobDAO.deleteJob(jobId);
+        boolean success = jobService.deleteJob(jobId, recruiterId);
         if (success) {
-            ResponseHelper.sendSuccess(exchange, "Job deleted successfully.");
+            ResponseHelper.sendSuccess(exchange, "Job opening deleted successfully.");
         } else {
             ResponseHelper.sendError(exchange, 500, "Failed to delete job.");
         }
+    }
+
+    private void applyMatchScores(Job job, com.recruitment.model.Applicant currentApplicant) {
+        Map<String, Object> match = com.recruitment.util.SkillMatcher.calculateMatch(
+                currentApplicant.getSkills(), currentApplicant.getExperienceYears(),
+                job.getSkillsRequired(), job.getExperienceRequired());
+        job.setMatchScore((Integer) match.get("score"));
+        job.setMatchLevel((String) match.get("level"));
+        @SuppressWarnings("unchecked")
+        List<String> matched = (List<String>) match.get("matchedSkills");
+        @SuppressWarnings("unchecked")
+        List<String> missing = (List<String>) match.get("missingSkills");
+        job.setMatchedSkills(matched);
+        job.setMissingSkills(missing);
     }
 
     private int getOrResolveRecruiterId(SessionManager.UserSession session) {

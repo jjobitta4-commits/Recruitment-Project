@@ -24,6 +24,7 @@ import java.util.UUID;
 public class ApplicantHandler implements HttpHandler {
 
     private final ApplicantDAO applicantDAO = new ApplicantDAO();
+    private final com.recruitment.dao.CandidateDAO candidateDAO = new com.recruitment.dao.CandidateDAO();
     private final ApplicationDAO applicationDAO = new ApplicationDAO();
     private final InterviewDAO interviewDAO = new InterviewDAO();
     private final String uploadsDir;
@@ -45,7 +46,8 @@ public class ApplicantHandler implements HttpHandler {
         }
 
         int applicantId = getOrResolveApplicantId(session);
-        if (applicantId <= 0) {
+        int candidateId = getOrResolveCandidateId(session);
+        if (applicantId <= 0 && candidateId <= 0) {
             ResponseHelper.sendError(exchange, 404, "Applicant profile not found.");
             return;
         }
@@ -55,14 +57,23 @@ public class ApplicantHandler implements HttpHandler {
 
         try {
             if (path.endsWith("/stats") && "GET".equals(method)) {
-                List<Application> apps = applicationDAO.getApplicationsByApplicant(applicantId);
-                List<Interview> ivs = interviewDAO.getInterviewsByApplicant(applicantId);
+                List<Application> apps = (candidateId > 0) ? applicationDAO.getApplicationsByCandidate(candidateId)
+                        : applicationDAO.getApplicationsByApplicant(applicantId);
+                List<Interview> ivs = (candidateId > 0) ? interviewDAO.getInterviewsByApplicant(candidateId)
+                        : interviewDAO.getInterviewsByApplicant(applicantId);
 
                 int shortlisted = 0;
                 int selected = 0;
                 for (Application a : apps) {
-                    if ("Shortlisted".equalsIgnoreCase(a.getStatus())) shortlisted++;
-                    if ("Selected".equalsIgnoreCase(a.getStatus())) selected++;
+                    String st = a.getStatus();
+                    if (st != null) {
+                        if ("Shortlisted".equalsIgnoreCase(st) || "Interview_Scheduled".equalsIgnoreCase(st) || "Interview Scheduled".equalsIgnoreCase(st)) {
+                            shortlisted++;
+                        }
+                        if ("Selected".equalsIgnoreCase(st) || "Offer".equalsIgnoreCase(st) || "Offered".equalsIgnoreCase(st)) {
+                            selected++;
+                        }
+                    }
                 }
 
                 Map<String, Object> stats = new HashMap<>();
@@ -170,6 +181,18 @@ public class ApplicantHandler implements HttpHandler {
         if (ap != null) {
             session.setApplicantId(ap.getApplicantId());
             return ap.getApplicantId();
+        }
+        return -1;
+    }
+
+    private int getOrResolveCandidateId(SessionManager.UserSession session) {
+        if (session.getCandidateId() != null && session.getCandidateId() > 0) {
+            return session.getCandidateId();
+        }
+        com.recruitment.model.Candidate c = candidateDAO.getCandidateByUserId(session.getUserId());
+        if (c != null) {
+            session.setCandidateId(c.getCandidateId());
+            return c.getCandidateId();
         }
         return -1;
     }

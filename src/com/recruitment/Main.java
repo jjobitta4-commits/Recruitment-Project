@@ -43,19 +43,36 @@ public class Main {
         try {
             // Test MySQL Connection
             boolean dbOk = DBConnection.testConnection();
+            if (dbOk) {
+                com.recruitment.util.DBMigration.runMigrations();
+            }
 
-            Server server = new Server(port, frontendDir.getAbsolutePath(), uploadsDir.getAbsolutePath());
-            server.start();
+            Server server = null;
+            int chosenPort = port;
+            for (int offset = 0; offset < 10; offset++) {
+                try {
+                    chosenPort = port + offset;
+                    server = new Server(chosenPort, frontendDir.getAbsolutePath(), uploadsDir.getAbsolutePath());
+                    server.start();
+                    break;
+                } catch (java.net.BindException be) {
+                    System.out.println("[INFO] Port " + chosenPort + " is already in use. Retrying on port " + (chosenPort + 1) + "...");
+                }
+            }
+
+            if (server == null) {
+                throw new java.io.IOException("Unable to bind to any available port between " + port + " and " + chosenPort);
+            }
 
             // Print Startup Banner
             System.out.println("=====================================");
             System.out.println("   ONLINE RECRUITMENT SYSTEM");
             System.out.println("=====================================");
             System.out.println();
-            System.out.println("Server started successfully.");
+            System.out.println("Server started successfully!");
             System.out.println();
-            System.out.println("Open:");
-            System.out.println("http://localhost:" + port);
+            System.out.println("Open your web browser at:");
+            System.out.println("http://localhost:" + chosenPort);
             System.out.println();
             if (dbOk) {
                 System.out.println("[Database] Connected successfully to MySQL ('recruitment_system').");
@@ -67,10 +84,18 @@ public class Main {
             System.out.println("=====================================");
             System.out.println("Press Ctrl+C in this terminal to stop the server.");
 
+            // Open browser automatically if supported
+            try {
+                if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                    java.awt.Desktop.getDesktop().browse(new java.net.URI("http://localhost:" + chosenPort));
+                }
+            } catch (Exception ignored) {}
+
             // Add graceful shutdown hook
+            final Server finalServer = server;
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("\nShutting down server...");
-                server.stop();
+                finalServer.stop();
                 System.out.println("Server stopped.");
             }));
 

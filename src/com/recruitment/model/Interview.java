@@ -9,6 +9,8 @@ import java.sql.Timestamp;
 public class Interview {
     private int interviewId;
     private int applicationId;
+    private int recruiterId;
+    private int candidateId;
     private int applicantId;
     private int jobId;
     private Date interviewDate;
@@ -17,11 +19,20 @@ public class Interview {
     private String meetingLink;
     private String status; // Scheduled, Completed, Cancelled
     private String notes;
+    private String feedback;
+    private int rating;
+    private String evaluationFeedback;
+    private int technicalScore;
+    private int communicationScore;
+    private int problemSolvingScore;
+    private int overallScore;
     private Timestamp createdAt;
 
     // Joined fields for display
     private String applicantName;
     private String applicantEmail;
+    private String candidateName;
+    private String candidateEmail;
     private String jobTitle;
     private String company;
 
@@ -146,4 +157,42 @@ public class Interview {
     public void setCompany(String company) {
         this.company = company;
     }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public int getRecruiterId() { return recruiterId; }
+    public void setRecruiterId(int recruiterId) { this.recruiterId = recruiterId; }
+
+    public int getCandidateId() { return candidateId > 0 ? candidateId : applicantId; }
+    public void setCandidateId(int candidateId) { this.candidateId = candidateId; this.applicantId = candidateId; }
+
+    public String getFeedback() { return feedback != null ? feedback : (evaluationFeedback != null ? evaluationFeedback : notes); }
+    public void setFeedback(String feedback) { this.feedback = feedback; this.notes = feedback; this.evaluationFeedback = feedback; }
+
+    public String getEvaluationFeedback() { return evaluationFeedback != null ? evaluationFeedback : feedback; }
+    public void setEvaluationFeedback(String evaluationFeedback) { this.evaluationFeedback = evaluationFeedback; this.feedback = evaluationFeedback; }
+
+    public int getTechnicalScore() { return technicalScore; }
+    public void setTechnicalScore(int technicalScore) { this.technicalScore = technicalScore; }
+
+    public int getCommunicationScore() { return communicationScore; }
+    public void setCommunicationScore(int communicationScore) { this.communicationScore = communicationScore; }
+
+    public int getProblemSolvingScore() { return problemSolvingScore; }
+    public void setProblemSolvingScore(int problemSolvingScore) { this.problemSolvingScore = problemSolvingScore; }
+
+    public int getOverallScore() { return overallScore; }
+    public void setOverallScore(int overallScore) { this.overallScore = overallScore; }
+
+    public String getCandidateName() { return candidateName != null ? candidateName : applicantName; }
+    public void setCandidateName(String candidateName) { this.candidateName = candidateName; this.applicantName = candidateName; }
+
+    public String getCandidateEmail() { return candidateEmail != null ? candidateEmail : applicantEmail; }
+    public void setCandidateEmail(String candidateEmail) { this.candidateEmail = candidateEmail; this.applicantEmail = candidateEmail; }
 }

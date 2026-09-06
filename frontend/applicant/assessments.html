@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Online Assessments — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .diff-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .diff-easy {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .diff-medium {
+      background: #fffbeb;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+    .diff-hard {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .option-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #ffffff;
+    }
+    .option-card:hover {
+      border-color: #3b82f6;
+      background: #f8fafc;
+    }
+    .option-card.selected {
+      border-color: #2563eb;
+      background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .option-card input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .trajectory-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="global-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <a href="../index.html" class="nav-brand">
+          <div class="brand-badge">R</div>
+          <span>RecruitHub</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../jobs.html">Find Jobs</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="applications.html">My Applications</a></li>
+          <li><a href="assessments.html" class="active">Assessments</a></li>
+          <li><a href="career-path.html">Career Paths</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="notifications.html" class="notif-badge-btn" title="Notifications">🔔</a>
+          <button onclick="Auth.logout()" class="btn btn-secondary btn-sm" title="Log Out">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html">📊 Overview Dashboard</a></li>
+        <li><a href="profile.html">👤 Profile & Resume</a></li>
+        <li><a href="applications.html">📝 My Applications</a></li>
+        <li><a href="assessments.html" class="active">🧠 Online Assessments</a></li>
+        <li><a href="career-path.html">🚀 Career Trajectory</a></li>
+        <li><a href="interviews.html">📅 My Interviews</a></li>
+        <li><a href="notifications.html">🔔 Notifications</a></li>
+        <li><a href="../jobs.html">🔍 Search Jobs</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <div class="card mb-3">
+        <div class="card-header">
+          <div>
+            <h2>Adaptive Online Assessment Engine</h2>
+            <p class="text-muted" style="font-size: 0.9rem;">Real-time AI difficulty steering (Easy ↔ Medium ↔ Hard) based on your performance</p>
+          </div>
+          <span class="badge" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; padding: 6px 12px; font-weight: 700;">
+            ⚡ Innovation 4 Active
+          </span>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="stats-grid mb-3" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-assess-available">0</div>
+            <div class="stat-label">Available Tests</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-assess-completed">0</div>
+            <div class="stat-label">Tests Completed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-assess-avg-score">0%</div>
+            <div class="stat-label">Average Score</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-assess-peak-tier" style="color: #7c3aed;">Medium</div>
+            <div class="stat-label">Peak Tier Reached</div>
+          </div>
+        </div>
+
+        <!-- Available Assessments -->
+        <h3 class="mb-2" style="font-size: 1.15rem; color: #1e293b;">Available Technical Assessments</h3>
+        <div id="assessments-catalog-grid" class="jobs-grid mb-4">
+          <div class="text-center text-muted" style="grid-column: 1 / -1; padding: 2rem;">Loading assessment tests...</div>
+        </div>
+
+        <!-- Past Test Attempts -->
+        <h3 class="mb-2" style="font-size: 1.15rem; color: #1e293b;">My Past Assessment Attempts</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Assessment Title</th>
+                <th>Completion Date</th>
+                <th>Score</th>
+                <th>Peak Difficulty Reached</th>
+                <th>Outcome</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="attempts-table-tbody">
+              <tr><td colspan="6" class="text-center text-muted">No test attempts recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Adaptive Test Modal -->
+  <div class="modal-overlay" id="adaptive-test-modal">
+    <div class="modal-box" style="max-width: 760px;">
+      <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <div>
+          <h3 id="test-modal-title" style="margin: 0; font-size: 1.15rem; color: #0f172a;">Adaptive Assessment</h3>
+          <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+            <span id="test-q-counter" style="font-size: 0.85rem; font-weight: 700; color: #64748b;">Question 1 of 5</span>
+            <span id="test-current-diff-badge" class="diff-badge diff-medium">🟡 Medium Tier (+15 pts)</span>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div id="test-timer" style="font-size: 1.15rem; font-weight: 800; color: #dc2626; font-family: monospace;">15:00</div>
+          <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">Remaining</span>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem;">
+        <!-- Real-Time Steering Feedback Alert -->
+        <div id="test-steering-alert" style="display: none; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.88rem; font-weight: 600;"></div>
+
+        <!-- Difficulty Trajectory -->
+        <div class="mb-3" style="background: #f8fafc; padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-right: 8px;">Adaptive Steering Path:</span>
+          <span id="test-trajectory-container" style="display: inline-flex; gap: 6px; flex-wrap: wrap;"></span>
+        </div>
+
+        <!-- Question Card -->
+        <div id="test-question-container">
+          <h4 id="test-question-text" style="font-size: 1.05rem; line-height: 1.5; color: #0f172a; margin-bottom: 1.25rem;"></h4>
+          
+          <form id="test-options-form">
+            <label class="option-card" id="opt-label-a" onclick="selectOption('A')">
+              <input type="radio" name="test-option" value="A">
+              <span style="font-weight: 700; width: 20px;">A.</span>
+              <span id="test-opt-a-text" style="flex: 1;"></span>
+            </label>
+            <label class="option-card" id="opt-label-b" onclick="selectOption('B')">
+              <input type="radio" name="test-option" value="B">
+              <span style="font-weight: 700; width: 20px;">B.</span>
+              <span id="test-opt-b-text" style="flex: 1;"></span>
+            </label>
+            <label class="option-card" id="opt-label-c" onclick="selectOption('C')">
+              <input type="radio" name="test-option" value="C">
+              <span style="font-weight: 700; width: 20px;">C.</span>
+              <span id="test-opt-c-text" style="flex: 1;"></span>
+            </label>
+            <label class="option-card" id="opt-label-d" onclick="selectOption('D')">
+              <input type="radio" name="test-option" value="D">
+              <span style="font-weight: 700; width: 20px;">D.</span>
+              <span id="test-opt-d-text" style="flex: 1;"></span>
+            </label>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.8rem; color: #64748b;">Adaptive engine dynamically recalibrates difficulty after every question.</span>
+        <button id="btn-submit-answer" onclick="submitCurrentAnswer()" class="btn btn-primary" disabled>
+          Submit Answer & Next ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Results Report Card Modal -->
+  <div class="modal-overlay" id="test-results-modal">
+    <div class="modal-box" style="max-width: 620px; text-align: center;">
+      <div class="modal-header">
+        <h3 style="margin: 0;">Adaptive Assessment Report</h3>
+        <button class="modal-close" onclick="closeModal('test-results-modal')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 2rem 1.5rem;">
+        <div id="results-badge-icon" style="font-size: 3.5rem; margin-bottom: 0.5rem;">🎉</div>
+        <h2 id="results-score-title" style="margin-bottom: 0.25rem; color: #0f172a;">85% Score</h2>
+        <div id="results-status-pill" class="badge mb-3" style="font-size: 0.9rem; padding: 4px 14px;">PASSED</div>
+        
+        <p id="results-summary-text" class="text-muted" style="max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.6;"></p>
+
+        <div class="stats-grid mb-3" style="grid-template-columns: repeat(3, 1fr); text-align: center;">
+          <div style="background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.78rem; color: #64748b;">Peak Tier Reached</div>
+            <div id="results-peak-tier" style="font-weight: 800; font-size: 1.1rem; color: #7c3aed;">Hard</div>
+          </div>
+          <div style="background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.78rem; color: #64748b;">Questions Answered</div>
+            <div id="results-questions-count" style="font-weight: 800; font-size: 1.1rem; color: #0f172a;">5 / 5</div>
+          </div>
+          <div style="background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.78rem; color: #64748b;">Smart Match Boost</div>
+            <div style="font-weight: 800; font-size: 1.1rem; color: #16a34a;">+15% Weight</div>
+          </div>
+        </div>
+
+        <div style="background: #eff6ff; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 0.85rem; color: #1e40af; text-align: left;">
+          💡 <strong>Algorithm Integration:</strong> Your assessment score has automatically fed into the <strong>5-Factor Smart Job Matching Engine</strong> and updated your candidate placement rank for recruiter vacancies!
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeModal('test-results-modal'); loadAssessmentsPage();" class="btn btn-primary" style="width: 100%;">
+          Return to Assessments Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
+    </div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script src="../js/assessment.js"></script>
+</body>
+</html>

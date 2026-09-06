@@ -1,9 +1,11 @@
 package com.recruitment.server;
 
 import com.recruitment.dao.ApplicantDAO;
+import com.recruitment.dao.CandidateDAO;
 import com.recruitment.dao.RecruiterDAO;
 import com.recruitment.dao.UserDAO;
 import com.recruitment.model.Applicant;
+import com.recruitment.model.Candidate;
 import com.recruitment.model.Recruiter;
 import com.recruitment.model.User;
 import com.recruitment.util.JSONUtil;
@@ -23,6 +25,7 @@ public class LoginHandler implements HttpHandler {
 
     private final UserDAO userDAO = new UserDAO();
     private final ApplicantDAO applicantDAO = new ApplicantDAO();
+    private final CandidateDAO candidateDAO = new CandidateDAO();
     private final RecruiterDAO recruiterDAO = new RecruiterDAO();
 
     @Override
@@ -72,13 +75,21 @@ public class LoginHandler implements HttpHandler {
 
         Integer applicantId = null;
         Integer recruiterId = null;
+        Integer candidateId = null;
         String name = user.getEmail();
 
-        if ("applicant".equalsIgnoreCase(user.getRole())) {
+        if ("applicant".equalsIgnoreCase(user.getRole()) || "candidate".equalsIgnoreCase(user.getRole())) {
             Applicant ap = applicantDAO.getApplicantByUserId(user.getUserId());
             if (ap != null) {
                 applicantId = ap.getApplicantId();
                 name = ap.getFullName();
+            }
+            Candidate c = candidateDAO.getCandidateByUserId(user.getUserId());
+            if (c != null) {
+                candidateId = c.getCandidateId();
+                if (name == null || name.equals(user.getEmail())) {
+                    name = c.getFullName();
+                }
             }
         } else if ("recruiter".equalsIgnoreCase(user.getRole())) {
             Recruiter rc = recruiterDAO.getRecruiterByUserId(user.getUserId());
@@ -86,11 +97,13 @@ public class LoginHandler implements HttpHandler {
                 recruiterId = rc.getRecruiterId();
                 name = rc.getRecruiterName();
             }
+        } else if ("admin".equalsIgnoreCase(user.getRole())) {
+            name = "System Administrator";
         }
 
         // Generate session
         SessionManager.UserSession session = SessionManager.createSession(
-                user.getUserId(), user.getEmail(), user.getRole(), applicantId, recruiterId);
+                user.getUserId(), user.getEmail(), user.getRole(), applicantId, recruiterId, candidateId);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("token", session.getToken());
@@ -98,7 +111,9 @@ public class LoginHandler implements HttpHandler {
         result.put("email", user.getEmail());
         result.put("role", user.getRole());
         result.put("name", name);
+        result.put("isVerified", user.isVerified());
         result.put("applicantId", applicantId);
+        result.put("candidateId", candidateId);
         result.put("recruiterId", recruiterId);
 
         ResponseHelper.sendSuccess(exchange, "Login successful", result);
@@ -125,6 +140,7 @@ public class LoginHandler implements HttpHandler {
         result.put("email", session.getEmail());
         result.put("role", session.getRole());
         result.put("applicantId", session.getApplicantId());
+        result.put("candidateId", session.getCandidateId());
         result.put("recruiterId", session.getRecruiterId());
 
         ResponseHelper.sendSuccess(exchange, "Session valid", result);

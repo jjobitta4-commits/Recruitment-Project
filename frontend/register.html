@@ -221,6 +221,55 @@
     </div>
   </footer>
 
+  <!-- =========================================================
+       Automated 6-Digit Email Verification Modal
+       ========================================================= -->
+  <div id="otp-modal-backdrop" class="modal-backdrop" style="display: none;">
+    <div class="modal-box" style="max-width: 470px; text-align: center; padding: 2rem 1.75rem;">
+      <div style="width: 64px; height: 64px; margin: 0 auto 1.25rem; background: rgba(37,99,235,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.85rem; color: var(--primary);">
+        ✉️
+      </div>
+      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--secondary);">Verify Your Email</h3>
+      <p class="text-muted" style="font-size: 0.92rem; margin-bottom: 1.25rem; line-height: 1.5;">
+        We've generated and sent a 6-digit verification code to<br>
+        <strong id="otp-target-email" style="color: var(--secondary);">user@domain.com</strong>
+      </p>
+
+      <!-- Local Demo Code Alert Box -->
+      <div id="otp-demo-banner" class="alert alert-info" style="display: none; padding: 0.75rem 1rem; font-size: 0.88rem; margin-bottom: 1.5rem; border-radius: 10px; text-align: left; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <span style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; opacity: 0.8; display: block;">Local Demo Dispatch</span>
+            <span style="font-weight: 800; font-size: 1.15rem; letter-spacing: 3px; font-family: monospace;" id="otp-demo-code">------</span>
+          </div>
+          <button type="button" id="btn-autofill-otp" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.78rem;">Auto-Fill</button>
+        </div>
+      </div>
+
+      <!-- 6-Digit Inputs -->
+      <div class="otp-container mb-3">
+        <input type="text" maxlength="1" class="otp-input" data-index="0" inputmode="numeric" autofocus>
+        <input type="text" maxlength="1" class="otp-input" data-index="1" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-input" data-index="2" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-input" data-index="3" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-input" data-index="4" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-input" data-index="5" inputmode="numeric">
+      </div>
+
+      <button id="btn-verify-otp" class="btn btn-primary btn-block btn-lg mb-3" style="font-weight: 600; font-size: 1rem; padding: 0.85rem;">
+        Verify & Continue
+      </button>
+
+      <div style="font-size: 0.88rem; color: var(--text-muted);">
+        Didn't receive the email? 
+        <button type="button" id="btn-resend-otp" style="background: none; border: none; color: var(--primary); font-weight: 700; cursor: pointer; padding: 0;">
+          Resend Code
+        </button>
+        <span id="resend-countdown" style="display: none; color: var(--text-muted);">(in <span id="resend-seconds">60</span>s)</span>
+      </div>
+    </div>
+  </div>
+
   <script src="js/common.js"></script>
   <script src="js/register.js"></script>
 </body>

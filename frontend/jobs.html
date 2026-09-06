@@ -103,6 +103,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('job-detail-modal')">Close</button>
+        <button class="btn btn-outline" id="modal-job-gap-trigger" style="border-color: #8b5cf6; color: #7c3aed;">📊 Skill Gap &amp; Roadmap</button>
         <button class="btn btn-primary" id="modal-job-apply-trigger">Apply for this Job</button>
       </div>
     </div>
@@ -149,6 +150,20 @@
         </div>
       </form>
     </div>
+  <!-- Modal 3: Skill Gap Analyzer & Learning Roadmap Modal -->
+  <div class="modal-overlay" id="skill-gap-modal">
+    <div class="modal-box" style="max-width: 860px;">
+      <div class="modal-header">
+        <div class="modal-title">🎯 Smart Skill Gap Audit &amp; Personalized Roadmap</div>
+        <button class="modal-close" onclick="closeModal('skill-gap-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="skill-gap-modal-content">
+        <!-- Populated dynamically via skill-gap.js -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('skill-gap-modal')">Close</button>
+      </div>
+    </div>
   </div>
 
   <footer class="footer">
@@ -158,6 +173,7 @@
   </footer>
 
   <script src="js/common.js"></script>
+  <script src="js/skill-gap.js"></script>
   <script src="js/jobs.js"></script>
 </body>
 </html>

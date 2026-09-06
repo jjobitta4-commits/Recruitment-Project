@@ -3,11 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RecruitHub — Online Recruitment Management System</title>
+  <title>Smart Recruitment and Candidate Skill Matching System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .innovation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .innovation-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .innovation-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+    .innovation-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-full);
+      margin-bottom: 0.75rem;
+    }
+    .health-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .health-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      display: inline-block;
+    }
+    .health-dot.down {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+    }
+    .portal-card {
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: var(--transition);
+    }
+    .portal-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+  </style>
 </head>
 <body>
 
@@ -16,16 +87,18 @@
     <nav class="navbar">
       <div class="container nav-container">
         <a href="index.html" class="nav-brand">
-          <div class="brand-badge">R</div>
-          <span>RecruitHub</span>
+          <div class="brand-badge">S</div>
+          <span>SmartRecruit</span>
         </a>
         <ul class="nav-links">
           <li><a href="index.html" class="active">Home</a></li>
-          <li><a href="jobs.html">Find Jobs</a></li>
+          <li><a href="jobs.html">Browse Jobs</a></li>
+          <li><a href="#innovations">Innovations</a></li>
+          <li><a href="#portals">Portals</a></li>
         </ul>
         <div class="nav-actions">
           <a href="login.html" class="btn btn-secondary btn-sm">Log In</a>
-          <a href="register.html" class="btn btn-primary btn-sm">Sign Up</a>
+          <a href="register.html" class="btn btn-primary btn-sm">Register</a>
         </div>
       </div>
     </nav>
@@ -34,186 +107,214 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
-      <div style="max-width: 780px;">
+      <div style="max-width: 820px;">
         <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(37,99,235,0.25); border: 1px solid rgba(96,165,250,0.35); padding: 0.4rem 1rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; color: #93c5fd; margin-bottom: 1.5rem; backdrop-filter: blur(8px);">
           <span style="display: inline-block; width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; box-shadow: 0 0 10px #60a5fa;"></span>
-          🚀 Online Recruitment & Candidate Tracking System
+          Core Java &bull; JDBC &bull; MySQL &bull; Responsive Vanilla Frontend
         </div>
-        <h1>Find Your Next Dream Job or <span>Hire Top Talent</span></h1>
+        <h1>Smart Recruitment &amp; <span>Candidate Skill Matching</span></h1>
         <p>
-          A complete, high-performance recruitment portal built with pure Core Java, JDBC, and vanilla web standards.
+          An intelligent enterprise-grade placement platform that matches candidates with vacancies using a 5-factor weighted algorithm, skill gap analysis, and adaptive online assessments.
         </p>
         
-        <!-- Live Quick Search Box -->
+        <!-- Quick Search -->
         <div class="hero-search-box">
-          <input type="text" id="hero-search-input" placeholder="Job title, keywords, or company...">
+          <input type="text" id="hero-search-input" placeholder="Search by role, required skills (Java, SQL, React), or company...">
           <select id="hero-type-select">
             <option value="">All Job Types</option>
             <option value="Full Time">Full Time</option>
-            <option value="Part Time">Part Time</option>
+            <option value="Remote">Remote</option>
             <option value="Internship">Internship</option>
             <option value="Contract">Contract</option>
-            <option value="Remote">Remote</option>
           </select>
-          <button id="hero-search-btn" class="btn btn-primary" style="padding: 0.85rem 1.75rem;">Search Jobs</button>
+          <button id="hero-search-btn" class="btn btn-primary" style="padding: 0.85rem 1.75rem;">Search Vacancies</button>
+        </div>
+
+        <!-- Live Health Pill -->
+        <div style="margin-top: 1.5rem;">
+          <div class="health-pill" id="health-telemetry-pill">
+            <span class="health-dot" id="health-dot"></span>
+            <span id="health-status-text">Checking Core Java Server &amp; MySQL...</span>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Key Highlights & Stats -->
+  <!-- System Architecture & Tech Highlights -->
   <section style="padding: 3.5rem 0; background: var(--surface); border-bottom: 1px solid var(--border);">
     <div class="container">
-      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 0;">
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 0;">
         <div class="stat-card">
-          <div class="stat-icon">💼</div>
+          <div class="stat-icon">☕</div>
           <div>
-            <div class="stat-val" id="home-stat-jobs">6+</div>
-            <div class="stat-label">Active Vacancies</div>
+            <div class="stat-val">Core Java</div>
+            <div class="stat-label">Built-in HttpServer</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">🏢</div>
+          <div class="stat-icon">🗄️</div>
           <div>
-            <div class="stat-val">2+</div>
-            <div class="stat-label">Top Hiring Companies</div>
+            <div class="stat-val">Pure JDBC</div>
+            <div class="stat-label">PreparedStatement &amp; MySQL</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">👨‍💻</div>
+          <div class="stat-icon">📐</div>
           <div>
-            <div class="stat-val">100%</div>
-            <div class="stat-label">Core Java Backend</div>
+            <div class="stat-val">21 Tables</div>
+            <div class="stat-label">Normalized Relational Schema</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">⚡</div>
+          <div class="stat-icon">🔒</div>
           <div>
-            <div class="stat-val">0</div>
-            <div class="stat-label">External Dependencies</div>
+            <div class="stat-val">SHA-256 + Salt</div>
+            <div class="stat-label">Secure RBAC Authentication</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Featured Jobs Grid -->
-  <section style="padding: 4.5rem 0;">
+  <!-- 5 Core Innovations Section -->
+  <section id="innovations" style="padding: 5rem 0; background: var(--bg);">
     <div class="container">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <h2>Featured Job Openings</h2>
-          <p class="text-muted">Browse recently posted career opportunities and apply instantly.</p>
-        </div>
-        <a href="jobs.html" class="btn btn-outline">View All Jobs &rarr;</a>
+      <div style="text-align: center; max-width: 750px; margin: 0 auto 3rem auto;">
+        <h2 style="font-size: 2.2rem; font-weight: 800;">5 Core Innovations</h2>
+        <p class="text-muted" style="font-size: 1.05rem;">
+          Engineering-focused algorithmic capabilities designed for high-precision talent acquisition and candidate career acceleration.
+        </p>
       </div>
 
-      <div class="job-grid" id="featured-jobs-grid">
-        <!-- Pre-rendered featured cards (dynamically refreshed via API when server is running) -->
-        <div class="job-card">
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <h3 class="job-title">Senior Full Stack Java Engineer</h3>
-              <span class="badge badge-full-time">Full Time</span>
-            </div>
-            <div class="job-company">🏢 Apex Cloud Solutions</div>
-            <div class="job-meta">
-              <span class="job-meta-item">📍 Bangalore / Hybrid</span>
-              <span class="job-meta-item">💼 2+ Years</span>
-            </div>
-            <p class="text-muted mb-2" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              Architect robust multi-tier Core Java backend services and REST APIs with MySQL database integration.
-            </p>
-          </div>
-          <div>
-            <div class="job-footer">
-              <div class="job-salary">₹12 - 18 LPA</div>
-              <a href="jobs.html" class="btn btn-primary btn-sm">View & Apply</a>
-            </div>
-          </div>
+      <div class="innovation-grid">
+        <!-- Innovation 1 -->
+        <div class="innovation-card">
+          <span class="innovation-badge" style="background: #eff6ff; color: #2563eb;">Innovation 1</span>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Smart Job Matching</h3>
+          <p class="text-muted" style="font-size: 0.92rem; line-height: 1.6;">
+            Multi-factor weighted match score: <strong>Skills 45%</strong>, <strong>Experience 20%</strong>, <strong>Education 10%</strong>, <strong>Projects 10%</strong>, and <strong>Assessment 15%</strong>. Provides strong matches, missing skills, and recommendations.
+          </p>
         </div>
 
-        <div class="job-card">
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <h3 class="job-title">Frontend React & UI Specialist</h3>
-              <span class="badge badge-remote">Remote</span>
-            </div>
-            <div class="job-company">🏢 TechCorp Global</div>
-            <div class="job-meta">
-              <span class="job-meta-item">📍 Remote Worldwide</span>
-              <span class="job-meta-item">💼 1-3 Years</span>
-            </div>
-            <p class="text-muted mb-2" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              Design and develop responsive, high-performance web dashboards and interactive candidate screening portals.
-            </p>
-          </div>
-          <div>
-            <div class="job-footer">
-              <div class="job-salary">₹10 - 15 LPA</div>
-              <a href="jobs.html" class="btn btn-primary btn-sm">View & Apply</a>
-            </div>
-          </div>
+        <!-- Innovation 2 -->
+        <div class="innovation-card">
+          <span class="innovation-badge" style="background: #fdf4ff; color: #c026d3;">Innovation 2</span>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Skill Gap Analyzer</h3>
+          <p class="text-muted" style="font-size: 0.92rem; line-height: 1.6;">
+            Compares candidate skills against job requirements, identifies missing critical skills, and automatically generates a sequential <strong>step-by-step learning path</strong> with priority tiers.
+          </p>
         </div>
 
-        <div class="job-card">
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <h3 class="job-title">Backend Java Developer (Freshers)</h3>
-              <span class="badge badge-internship">Internship</span>
-            </div>
-            <div class="job-company">🏢 Apex Cloud Solutions</div>
-            <div class="job-meta">
-              <span class="job-meta-item">📍 Hyderabad</span>
-              <span class="job-meta-item">💼 0-1 Year</span>
-            </div>
-            <p class="text-muted mb-2" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              Opportunity for junior developers to master Core Java concurrency, JDBC database connections, and HTTP server design.
-            </p>
-          </div>
-          <div>
-            <div class="job-footer">
-              <div class="job-salary">₹35,000 / mo</div>
-              <a href="jobs.html" class="btn btn-primary btn-sm">View & Apply</a>
-            </div>
-          </div>
+        <!-- Innovation 3 -->
+        <div class="innovation-card">
+          <span class="innovation-badge" style="background: #ecfdf5; color: #059669;">Innovation 3</span>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Candidate Ranking</h3>
+          <p class="text-muted" style="font-size: 0.92rem; line-height: 1.6;">
+            Recruiters view applicants sorted by calculated algorithmic match scores, with multi-criteria filters for skills match percentage, assessment scores, and verified years of experience.
+          </p>
+        </div>
+
+        <!-- Innovation 4 -->
+        <div class="innovation-card">
+          <span class="innovation-badge" style="background: #fffbeb; color: #d97706;">Innovation 4</span>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Adaptive Assessment</h3>
+          <p class="text-muted" style="font-size: 0.92rem; line-height: 1.6;">
+            Dynamic test engine adjusting question difficulty in real-time: correct answers scale up to <strong>Medium &amp; Hard</strong>, incorrect steer to <strong>Easy</strong>, producing holistic proficiency scoring.
+          </p>
+        </div>
+
+        <!-- Innovation 5 -->
+        <div class="innovation-card">
+          <span class="innovation-badge" style="background: #faf5ff; color: #9333ea;">Innovation 5</span>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Career Recommendation</h3>
+          <p class="text-muted" style="font-size: 0.92rem; line-height: 1.6;">
+            Analyzes declared skills, certifications, and assessment history to recommend industry career trajectories (Backend Architect, Full-Stack Lead, DevOps Specialist) and skill readiness levels.
+          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Dual Portals (Applicant & Recruiter CTA) -->
-  <section style="padding: 4.5rem 0; background: var(--surface-alt); border-top: 1px solid var(--border);">
+  <!-- Three Role Portals -->
+  <section id="portals" style="padding: 5rem 0; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
     <div class="container">
       <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto;">
-        <h2>Empowering Job Seekers & Hiring Teams</h2>
-        <p class="text-muted">Everything you need for seamless recruitment in a lightweight, robust platform.</p>
+        <h2>Role-Based Portals</h2>
+        <p class="text-muted">Dedicated specialized workflows for Candidates, Recruiters, and Administrators.</p>
       </div>
 
-      <div class="form-row" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
-        <!-- Applicant Card -->
-        <div class="card" style="border-top: 4px solid var(--primary);">
-          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">👨‍💼</div>
-          <h3 class="mb-1">For Job Seekers & Students</h3>
-          <p class="text-muted mb-3">
-            Build your comprehensive tech profile, upload PDF resumes, filter vacancies by skills, track application progress in real-time, and attend scheduled interviews.
-          </p>
-          <div class="flex gap-2">
-            <a href="register.html" class="btn btn-primary btn-sm">Create Applicant Account</a>
-            <a href="jobs.html" class="btn btn-secondary btn-sm">Browse Vacancies</a>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+        <!-- Candidate Portal -->
+        <div class="portal-card" style="border-top: 4px solid var(--primary);">
+          <div>
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">👨‍🎓</div>
+            <h3 class="mb-1">Candidate Portal</h3>
+            <p class="text-muted mb-3" style="font-size: 0.92rem;">
+              Build your technical profile, take adaptive skill assessments, receive smart match scores, view learning paths for missing skills, and attend virtual video interviews.
+            </p>
+          </div>
+          <div class="flex gap-2" style="margin-top: 1.5rem;">
+            <a href="register.html" class="btn btn-primary btn-sm">Candidate Register</a>
+            <a href="login.html" class="btn btn-secondary btn-sm">Candidate Login</a>
           </div>
         </div>
 
-        <!-- Recruiter Card -->
-        <div class="card" style="border-top: 4px solid var(--accent);">
-          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🏢</div>
-          <h3 class="mb-1">For Recruiters & Companies</h3>
-          <p class="text-muted mb-3">
-            Post and manage job openings, review applicant profiles, download verified PDF resumes, update review statuses (Shortlisted, Selected, Rejected), and schedule live interviews.
-          </p>
-          <div class="flex gap-2">
-            <a href="register.html" class="btn btn-primary btn-sm">Post a Job Opening</a>
+        <!-- Recruiter Portal -->
+        <div class="portal-card" style="border-top: 4px solid var(--accent);">
+          <div>
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🏢</div>
+            <h3 class="mb-1">Recruiter Portal</h3>
+            <p class="text-muted mb-3" style="font-size: 0.92rem;">
+              Post vacancies with mandatory and preferred skills, review ranked applicant shortlists, evaluate assessment breakdowns, schedule interviews, and submit technical ratings.
+            </p>
+          </div>
+          <div class="flex gap-2" style="margin-top: 1.5rem;">
+            <a href="register.html" class="btn btn-primary btn-sm">Recruiter Register</a>
             <a href="login.html" class="btn btn-secondary btn-sm">Recruiter Login</a>
+          </div>
+        </div>
+
+        <!-- Administrator Portal -->
+        <div class="portal-card" style="border-top: 4px solid #8b5cf6;">
+          <div>
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🛡️</div>
+            <h3 class="mb-1">Administrator Portal</h3>
+            <p class="text-muted mb-3" style="font-size: 0.92rem;">
+              System-wide oversight, job vacancy approvals, user account state management, master skills taxonomy curation, and complete transactional audit logs.
+            </p>
+          </div>
+          <div class="flex gap-2" style="margin-top: 1.5rem;">
+            <a href="login.html" class="btn btn-primary btn-sm">Admin Access</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Accounts & Quick Testing Card -->
+  <section style="padding: 3.5rem 0; background: var(--bg);">
+    <div class="container">
+      <div class="card" style="background: #ffffff; border: 1px solid var(--border); border-left: 5px solid var(--primary);">
+        <h3 style="margin-bottom: 0.5rem;">Quick Demo Credentials for Evaluation</h3>
+        <p class="text-muted mb-3" style="font-size: 0.9rem;">
+          You can immediately sign in using any of the pre-seeded demo accounts below:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+          <div style="padding: 1rem; background: var(--surface-alt); border-radius: var(--radius);">
+            <strong>👨‍💼 Candidate Account</strong>
+            <div style="font-size: 0.88rem; margin-top: 0.35rem;">Email: <code>john.doe@email.com</code></div>
+            <div style="font-size: 0.88rem;">Password: <code>candidate123</code></div>
+          </div>
+          <div style="padding: 1rem; background: var(--surface-alt); border-radius: var(--radius);">
+            <strong>🏢 Recruiter Account</strong>
+            <div style="font-size: 0.88rem; margin-top: 0.35rem;">Email: <code>recruiter@apexcloud.com</code></div>
+            <div style="font-size: 0.88rem;">Password: <code>recruiter123</code></div>
+          </div>
+          <div style="padding: 1rem; background: var(--surface-alt); border-radius: var(--radius);">
+            <strong>🛡️ Admin Account</strong>
+            <div style="font-size: 0.88rem; margin-top: 0.35rem;">Email: <code>admin@recruithub.com</code></div>
+            <div style="font-size: 0.88rem;">Password: <code>admin123</code></div>
           </div>
         </div>
       </div>
@@ -224,70 +325,54 @@
   <footer class="footer">
     <div class="container flex justify-between items-center" style="flex-wrap: wrap; gap: 1rem;">
       <div>
-        <strong>RecruitHub</strong> — Core Java + JDBC Online Recruitment System
+        <strong>Smart Recruitment &amp; Skill Matching System</strong> &bull; Core Java &amp; MySQL
       </div>
       <div>
         <a href="index.html">Home</a> &bull;
         <a href="jobs.html">Find Jobs</a> &bull;
         <a href="login.html">Login</a> &bull;
-        <a href="register.html">Sign Up</a>
+        <a href="register.html">Register</a>
       </div>
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/common.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       renderNavbar('home');
 
-      // Hero search redirect
+      // Check Server & DB Health
+      API.checkHealth().then(res => {
+        const dot = document.getElementById('health-dot');
+        const text = document.getElementById('health-status-text');
+        if (res && res.status === 'UP') {
+          dot.className = 'health-dot';
+          const tables = res.database ? res.database.tablesCount : 21;
+          text.innerHTML = `Core Java Server: <strong>Online</strong> &bull; MySQL: <strong>Connected</strong> (${tables} Tables) &bull; Uptime: <strong>${res.uptimeSeconds}s</strong>`;
+        } else {
+          dot.className = 'health-dot down';
+          text.innerHTML = 'Core Java Server or Database is Degraded';
+        }
+      }).catch(() => {
+        const dot = document.getElementById('health-dot');
+        const text = document.getElementById('health-status-text');
+        if (dot) dot.className = 'health-dot down';
+        if (text) text.textContent = 'Server Offline. Start MainServer to connect.';
+      });
+
+      // Search button
       const heroBtn = document.getElementById('hero-search-btn');
       if (heroBtn) {
         heroBtn.addEventListener('click', () => {
           const kw = document.getElementById('hero-search-input').value.trim();
           const type = document.getElementById('hero-type-select').value;
-          let url = '/jobs.html?';
+          let url = 'jobs.html?';
           if (kw) url += 'keyword=' + encodeURIComponent(kw) + '&';
           if (type) url += 'jobType=' + encodeURIComponent(type);
           window.location.href = url;
         });
       }
-
-      // Load 3 sample featured jobs
-      fetch('/api/jobs')
-        .then(r => r.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.data)) {
-            const grid = document.getElementById('featured-jobs-grid');
-            const jobs = data.data.slice(0, 3);
-            if (grid && jobs.length > 0) {
-              grid.innerHTML = jobs.map(j => `
-                <div class="job-card">
-                  <div>
-                    <div class="flex justify-between items-center mb-1">
-                      <h3 class="job-title">${j.title}</h3>
-                      ${getJobTypeBadge(j.jobType)}
-                    </div>
-                    <div class="job-company">🏢 ${j.company}</div>
-                    <div class="job-meta">
-                      <span class="job-meta-item">📍 ${j.location || 'Remote'}</span>
-                      <span class="job-meta-item">💼 ${j.experienceRequired || 'Any'}</span>
-                    </div>
-                    <p class="text-muted mb-2" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                      ${j.description}
-                    </p>
-                  </div>
-                  <div>
-                    <div class="job-footer">
-                      <div class="job-salary">${j.salaryRange || 'Competitive'}</div>
-                      <a href="/jobs.html" class="btn btn-primary btn-sm">View & Apply</a>
-                    </div>
-                  </div>
-                </div>
-              `).join('');
-            }
-          }
-        }).catch(() => {});
     });
   </script>
 </body>

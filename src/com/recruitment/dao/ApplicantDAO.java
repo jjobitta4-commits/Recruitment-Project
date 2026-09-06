@@ -68,8 +68,32 @@ public class ApplicantDAO {
                     return mapApplicant(rs);
                 }
             }
+        } catch (SQLException ignored) {}
+
+        String candSql = "SELECT c.candidate_id AS applicant_id, c.user_id, c.full_name, c.phone, c.dob, c.gender, " +
+                         "c.address, c.city, c.country, c.bio, u.email " +
+                         "FROM candidates c JOIN users u ON c.user_id = u.user_id WHERE c.user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(candSql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Applicant ap = new Applicant();
+                    ap.setApplicantId(rs.getInt("applicant_id"));
+                    ap.setUserId(rs.getInt("user_id"));
+                    ap.setEmail(rs.getString("email"));
+                    ap.setFullName(rs.getString("full_name"));
+                    ap.setPhone(rs.getString("phone"));
+                    ap.setDob(rs.getDate("dob"));
+                    ap.setGender(rs.getString("gender"));
+                    ap.setAddress(rs.getString("address"));
+                    ap.setCity(rs.getString("city"));
+                    ap.setCountry(rs.getString("country"));
+                    return ap;
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("[ApplicantDAO.getApplicantByUserId] Error: " + e.getMessage());
+            System.err.println("[ApplicantDAO.getApplicantByUserId fallback] Error: " + e.getMessage());
         }
         return null;
     }
@@ -87,8 +111,32 @@ public class ApplicantDAO {
                     return mapApplicant(rs);
                 }
             }
+        } catch (SQLException ignored) {}
+
+        String candSql = "SELECT c.candidate_id AS applicant_id, c.user_id, c.full_name, c.phone, c.dob, c.gender, " +
+                         "c.address, c.city, c.country, c.bio, u.email " +
+                         "FROM candidates c JOIN users u ON c.user_id = u.user_id WHERE c.candidate_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(candSql)) {
+            ps.setInt(1, applicantId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Applicant ap = new Applicant();
+                    ap.setApplicantId(rs.getInt("applicant_id"));
+                    ap.setUserId(rs.getInt("user_id"));
+                    ap.setEmail(rs.getString("email"));
+                    ap.setFullName(rs.getString("full_name"));
+                    ap.setPhone(rs.getString("phone"));
+                    ap.setDob(rs.getDate("dob"));
+                    ap.setGender(rs.getString("gender"));
+                    ap.setAddress(rs.getString("address"));
+                    ap.setCity(rs.getString("city"));
+                    ap.setCountry(rs.getString("country"));
+                    return ap;
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("[ApplicantDAO.getApplicantById] Error: " + e.getMessage());
+            System.err.println("[ApplicantDAO.getApplicantById fallback] Error: " + e.getMessage());
         }
         return null;
     }

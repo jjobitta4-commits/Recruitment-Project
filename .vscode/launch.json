@@ -1,0 +1,16 @@
+{
+    version: 0.2.0,
+    configurations: [
+        {
+            type: java,
+            name: Run Online Recruitment System,
+            request: launch,
+            mainClass: com.recruitment.Main,
+            projectName: recruitmentproject,
+            classPaths: [
+                /bin,
+                /lib/*
+            ]
+        }
+    ]
+}

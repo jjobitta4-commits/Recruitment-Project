@@ -6,7 +6,7 @@
 // Helper to determine relative base path for root vs subfolder
 function getBasePath() {
   const path = window.location.pathname.replace(/\\/g, '/');
-  if (path.includes('/applicant/') || path.includes('/recruiter/')) {
+  if (path.includes('/applicant/') || path.includes('/recruiter/') || path.includes('/admin/')) {
     return '../';
   }
   return '';
@@ -40,11 +40,20 @@ const Auth = {
   },
   isApplicant() {
     const user = this.getUser();
-    return user && user.role && user.role.toLowerCase() === 'applicant';
+    if (!user || !user.role) return false;
+    const r = user.role.toLowerCase();
+    return r === 'applicant' || r === 'candidate';
+  },
+  isCandidate() {
+    return this.isApplicant();
   },
   isRecruiter() {
     const user = this.getUser();
     return user && user.role && user.role.toLowerCase() === 'recruiter';
+  },
+  isAdmin() {
+    const user = this.getUser();
+    return user && user.role && user.role.toLowerCase() === 'admin';
   },
   requireAuth(expectedRole = null) {
     const base = getBasePath();
@@ -52,20 +61,31 @@ const Auth = {
       window.location.href = base + 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
       return false;
     }
-    if (expectedRole && this.getUser().role.toLowerCase() !== expectedRole.toLowerCase()) {
-      if (this.isApplicant()) window.location.href = base + 'applicant/dashboard.html';
-      else if (this.isRecruiter()) window.location.href = base + 'recruiter/dashboard.html';
-      else window.location.href = base + 'login.html';
-      return false;
+    const userRole = (this.getUser().role || '').toLowerCase();
+    if (expectedRole) {
+      const exp = expectedRole.toLowerCase();
+      const match = (exp === userRole) || 
+                    (exp === 'applicant' && userRole === 'candidate') || 
+                    (exp === 'candidate' && userRole === 'applicant');
+      if (!match) {
+        if (this.isApplicant()) window.location.href = base + 'applicant/dashboard.html';
+        else if (this.isRecruiter()) window.location.href = base + 'recruiter/dashboard.html';
+        else if (this.isAdmin()) window.location.href = base + 'admin/dashboard.html';
+        else window.location.href = base + 'login.html';
+        return false;
+      }
     }
     return true;
   },
   logout() {
     const token = this.getToken();
     if (token) {
-      fetch('/api/logout', {
+      fetch(apiEndpoint('/api/logout'), {
         method: 'POST',
-        headers: { 'X-Session-Token': token }
+        headers: {
+          'X-Session-Token': token,
+          'Authorization': 'Bearer ' + token
+        }
       }).catch(() => {});
     }
     this.clearSession();
@@ -79,7 +99,18 @@ const Auth = {
 // ==========================================
 // 2. Fetch API Helper with Auth Headers
 // ==========================================
+function apiEndpoint(url) {
+  if (!url) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (!url.startsWith('/')) url = '/' + url;
+  if (window.location.protocol === 'file:') {
+    return 'http://localhost:8080' + url;
+  }
+  return url;
+}
+
 async function authFetch(url, options = {}) {
+  url = apiEndpoint(url);
   const token = Auth.getToken();
   const headers = options.headers || {};
 
@@ -196,6 +227,7 @@ function renderNavbar(activePage = '') {
     if (isApp) {
       navLinksHtml += `
         <li><a href="${base}applicant/applications.html" class="${activePage === 'applications' ? 'active' : ''}">My Applications</a></li>
+        <li><a href="${base}applicant/assessments.html" class="${activePage === 'assessments' ? 'active' : ''}">Assessments</a></li>
         <li><a href="${base}applicant/interviews.html" class="${activePage === 'interviews' ? 'active' : ''}">Interviews</a></li>
       `;
     } else {
@@ -270,8 +302,9 @@ async function fetchUnreadNotificationsCount() {
 // ==========================================
 function getStatusBadge(status) {
   if (!status) return '<span class="badge">Unknown</span>';
-  const s = status.toLowerCase().replace(/\s+/g, '-');
-  return `<span class="badge badge-${s}">${status}</span>`;
+  const cleanText = status.replace(/_/g, ' ');
+  const s = status.toLowerCase().replace(/[\s_]+/g, '-');
+  return `<span class="badge badge-${s}">${cleanText}</span>`;
 }
 
 function getJobTypeBadge(type) {

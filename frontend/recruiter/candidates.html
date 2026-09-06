@@ -55,9 +55,9 @@
           </div>
         </div>
 
-        <!-- Filter Bar -->
+        <!-- Filter & Smart Match Bar -->
         <div class="card mb-3" style="background: var(--surface-alt); padding: 1rem;">
-          <div class="form-row" style="grid-template-columns: 2fr 1fr;">
+          <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label">Filter by Job Posting</label>
               <select id="candidate-filter-job" class="form-control">
@@ -76,6 +76,16 @@
                 <option value="Rejected">Rejected</option>
               </select>
             </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">🏆 Candidate Ranking System</label>
+              <select id="candidate-sort-match" class="form-control" style="border-color: #3b82f6; font-weight: 700; color: #1e3a8a;">
+                <option value="match">🏆 Smart Match Score (5-Factor Formula)</option>
+                <option value="exp">💼 Experience Depth (Years)</option>
+                <option value="skills">💻 Technical Skills Match</option>
+                <option value="assessment">📝 Assessment Performance</option>
+                <option value="date">📅 Application Date (Newest)</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -83,17 +93,18 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Candidate Name & Contact</th>
+                <th style="width: 70px; text-align: center;">Rank</th>
+                <th>Candidate Profile</th>
                 <th>Target Job</th>
-                <th>Experience & Skills</th>
+                <th>Match & 5-Factor Score</th>
                 <th>Applied Date</th>
-                <th>Application Status</th>
+                <th>Pipeline Status</th>
                 <th>Resume</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="candidates-table-tbody">
-              <tr><td colspan="7" class="text-center text-muted">Loading candidate applications...</td></tr>
+              <tr><td colspan="8" class="text-center text-muted">Loading candidate applications...</td></tr>
             </tbody>
           </table>
         </div>

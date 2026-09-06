@@ -56,7 +56,13 @@ async function fetchJobs() {
   }
 
   try {
-    const res = await fetch('/api/jobs');
+    const jobsUrl = typeof apiEndpoint === 'function' ? apiEndpoint('/api/jobs') : '/api/jobs';
+    const headers = {};
+    if (typeof Auth !== 'undefined' && Auth.isLoggedIn && Auth.isLoggedIn()) {
+      headers['Authorization'] = 'Bearer ' + Auth.getToken();
+      headers['X-Session-Token'] = Auth.getToken();
+    }
+    const res = await fetch(jobsUrl, { headers });
     const data = await res.json();
     if (data.success && Array.isArray(data.data)) {
       allJobs = data.data;
@@ -72,7 +78,8 @@ async function fetchJobs() {
 
 function renderJobs(jobs) {
   const container = document.getElementById('jobs-grid-container');
-  const countEl = document.getElementById('jobs-count-display');
+  const countEl = document.getElementById('job-count-text');
+
   if (!container) return;
 
   if (countEl) {
@@ -103,6 +110,15 @@ function renderJobs(jobs) {
           </div>
           <div class="job-company">🏢 ${j.company}</div>
           
+          ${j.matchScore ? `
+            <div style="margin: 0.5rem 0;">
+              <span class="match-badge ${(j.matchLevel || 'MODERATE').toLowerCase()}">
+                <span class="match-badge-dot"></span>
+                ${j.matchScore}% Match for Your Profile
+              </span>
+            </div>
+          ` : ''}
+
           <div class="job-meta">
             <span class="job-meta-item">📍 ${j.location || 'Remote'}</span>
             <span class="job-meta-item">💼 ${j.experienceRequired || 'Any Exp'}</span>
@@ -124,7 +140,8 @@ function renderJobs(jobs) {
               <div class="job-salary">${j.salaryRange || 'Competitive Salary'}</div>
               <div style="font-size: 0.75rem; color: #94a3b8;">${deadlineText}</div>
             </div>
-            <div class="flex gap-1">
+            <div class="flex gap-1" style="flex-wrap: wrap;">
+              <button onclick="openSkillGapModal(${j.jobId})" class="btn btn-outline btn-sm" style="border-color: #8b5cf6; color: #7c3aed;" title="Analyze Skill Gap & Learning Roadmap">📊 Skill Gap</button>
               <button onclick="viewJobDetails(${j.jobId})" class="btn btn-secondary btn-sm">Details</button>
               <button onclick="openApplyModal(${j.jobId})" class="btn btn-primary btn-sm">Apply Now</button>
             </div>
@@ -204,8 +221,24 @@ function viewJobDetails(jobId) {
       </div>
 
       <div class="mb-3">
-        <h4 class="mb-1">Skills & Qualifications</h4>
-        <div class="job-skills mb-2">${skillsList}</div>
+        <h4 class="mb-1">Required Skills &amp; Competencies</h4>
+        ${job.mandatorySkills && job.mandatorySkills.length > 0 ? `
+          <div style="margin-bottom: 0.5rem;">
+            <strong style="font-size: 0.8rem; color: #991b1b; text-transform: uppercase;">🔴 Mandatory Requirements:</strong>
+            <div class="job-skills mt-1 mb-2">
+              ${job.mandatorySkills.map(s => `<span class="skill-tag" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">${s.skillName} (${s.minYearsRequired}y+ req)</span>`).join(' ')}
+            </div>
+          </div>
+        ` : `<div class="job-skills mb-2">${skillsList}</div>`}
+
+        ${job.preferredSkills && job.preferredSkills.length > 0 ? `
+          <div style="margin-bottom: 0.5rem;">
+            <strong style="font-size: 0.8rem; color: #0369a1; text-transform: uppercase;">🔵 Preferred / Bonus:</strong>
+            <div class="job-skills mt-1 mb-2">
+              ${job.preferredSkills.map(s => `<span class="skill-tag" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">${s.skillName}</span>`).join(' ')}
+            </div>
+          </div>
+        ` : ''}
         <p class="text-muted" style="font-size: 0.9rem;">Education: <strong>${job.educationRequired || 'Not specified'}</strong></p>
       </div>
 
@@ -225,6 +258,14 @@ function viewJobDetails(jobId) {
     };
   }
 
+  const gapBtn = document.getElementById('modal-job-gap-trigger');
+  if (gapBtn) {
+    gapBtn.onclick = () => {
+      closeModal('job-detail-modal');
+      openSkillGapModal(jobId);
+    };
+  }
+
   openModal('job-detail-modal');
 }
 
@@ -232,7 +273,8 @@ function openApplyModal(jobId) {
   if (!Auth.isLoggedIn()) {
     showToast('Please log in as an applicant to apply.', 'info');
     setTimeout(() => {
-      window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      const base = typeof getBasePath === 'function' ? getBasePath() : '';
+      window.location.href = base + 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
     }, 1000);
     return;
   }
@@ -275,7 +317,8 @@ async function handleApplySubmit(e) {
   }
 
   try {
-    const res = await fetch('/api/applications', {
+    const applyUrl = typeof apiEndpoint === 'function' ? apiEndpoint('/api/applications') : '/api/applications';
+    const res = await fetch(applyUrl, {
       method: 'POST',
       headers: {
         'X-Session-Token': Auth.getToken(),

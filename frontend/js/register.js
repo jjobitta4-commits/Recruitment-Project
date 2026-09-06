@@ -1,8 +1,11 @@
 /**
- * Registration Page Script
+ * Registration Page Script with Automated 6-Digit Email Verification
  */
 
 let currentRole = 'applicant';
+let pendingSession = null;
+let currentRegisteredEmail = '';
+let resendTimerInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   renderNavbar('register');
@@ -64,6 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (formRecruiter) {
     formRecruiter.addEventListener('submit', handleRecruiterRegister);
   }
+
+  // Setup OTP Modal Interactions
+  setupOtpModal();
 });
 
 async function handleApplicantRegister(e) {
@@ -89,7 +95,7 @@ async function handleApplicantRegister(e) {
   }
 
   try {
-    const res = await fetch('/api/register', {
+    const res = await fetch(apiEndpoint('/api/register'), {
       method: 'POST',
       body: formData // multipart/form-data
     });
@@ -97,11 +103,12 @@ async function handleApplicantRegister(e) {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      showToast('Registration successful! Logging you in...', 'success');
-      Auth.setSession(data.data.token, data.data);
-      setTimeout(() => {
-        window.location.href = '/applicant/dashboard.html';
-      }, 800);
+      pendingSession = data.data;
+      currentRegisteredEmail = email;
+      showToast('Account created! Verification code sent to your email.', 'success');
+      
+      // Request verification code dispatch
+      await requestOtpCode(email, 'REGISTRATION');
     } else {
       showToast(data.message || 'Registration failed.', 'error');
     }
@@ -151,7 +158,7 @@ async function handleRecruiterRegister(e) {
   }
 
   try {
-    const res = await fetch('/api/register', {
+    const res = await fetch(apiEndpoint('/api/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -160,11 +167,12 @@ async function handleRecruiterRegister(e) {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      showToast('Recruiter account created! Welcome aboard.', 'success');
-      Auth.setSession(data.data.token, data.data);
-      setTimeout(() => {
-        window.location.href = '/recruiter/dashboard.html';
-      }, 800);
+      pendingSession = data.data;
+      currentRegisteredEmail = email;
+      showToast('Account created! Verification code sent to your email.', 'success');
+      
+      // Request verification code dispatch
+      await requestOtpCode(email, 'REGISTRATION');
     } else {
       showToast(data.message || 'Registration failed.', 'error');
     }
@@ -177,4 +185,240 @@ async function handleRecruiterRegister(e) {
       submitBtn.textContent = 'Register Recruiter Account';
     }
   }
+}
+
+/* =========================================================
+   Automated 6-Digit OTP Verification Functions
+   ========================================================= */
+
+async function requestOtpCode(email, purpose, isResend = false) {
+  try {
+    const endpoint = isResend ? '/api/verify-email/resend' : '/api/verify-email/send';
+    const res = await fetch(apiEndpoint(endpoint), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, purpose })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      openOtpModal(email, data.data ? data.data.peekCode : null);
+      startResendCooldown(data.data ? data.data.cooldownSeconds : 60);
+    } else {
+      showToast(data.message || 'Could not send verification code.', 'error');
+      // Still open modal so user can input code if previously generated
+      openOtpModal(email, null);
+    }
+  } catch (err) {
+    console.error('OTP request error:', err);
+    openOtpModal(email, null);
+  }
+}
+
+function openOtpModal(email, peekCode) {
+  const modal = document.getElementById('otp-modal-backdrop');
+  const targetEmailEl = document.getElementById('otp-target-email');
+  const demoBanner = document.getElementById('otp-demo-banner');
+  const demoCodeEl = document.getElementById('otp-demo-code');
+
+  if (targetEmailEl) targetEmailEl.textContent = email;
+
+  if (peekCode) {
+    if (demoBanner) demoBanner.style.display = 'block';
+    if (demoCodeEl) demoCodeEl.textContent = peekCode;
+  }
+
+  if (modal) {
+    modal.style.display = 'flex';
+    clearOtpInputs();
+    const firstInput = modal.querySelector('.otp-input[data-index="0"]');
+    if (firstInput) setTimeout(() => firstInput.focus(), 100);
+  }
+}
+
+function clearOtpInputs() {
+  document.querySelectorAll('.otp-input').forEach(inp => {
+    inp.value = '';
+    inp.classList.remove('filled');
+  });
+}
+
+function setupOtpModal() {
+  const inputs = Array.from(document.querySelectorAll('.otp-input'));
+  const btnVerify = document.getElementById('btn-verify-otp');
+  const btnResend = document.getElementById('btn-resend-otp');
+  const btnAutofill = document.getElementById('btn-autofill-otp');
+
+  inputs.forEach((input, index) => {
+    // Input navigation
+    input.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = val ? val[val.length - 1] : '';
+
+      if (e.target.value) {
+        input.classList.add('filled');
+        if (index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      } else {
+        input.classList.remove('filled');
+      }
+
+      // If all filled, auto-trigger verify
+      checkAllFilled();
+    });
+
+    // Backspace navigation
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !input.value && index > 0) {
+        inputs[index - 1].focus();
+      }
+    });
+
+    // Paste handling (auto fills 6 digits)
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+      const digits = pasteData.replace(/[^0-9]/g, '').slice(0, 6);
+      if (digits) {
+        digits.split('').forEach((d, i) => {
+          if (inputs[i]) {
+            inputs[i].value = d;
+            inputs[i].classList.add('filled');
+          }
+        });
+        const nextIndex = Math.min(digits.length, inputs.length - 1);
+        inputs[nextIndex].focus();
+        checkAllFilled();
+      }
+    });
+  });
+
+  if (btnAutofill) {
+    btnAutofill.addEventListener('click', () => {
+      const demoCodeEl = document.getElementById('otp-demo-code');
+      if (demoCodeEl && demoCodeEl.textContent) {
+        const code = demoCodeEl.textContent.trim();
+        code.split('').forEach((digit, i) => {
+          if (inputs[i]) {
+            inputs[i].value = digit;
+            inputs[i].classList.add('filled');
+          }
+        });
+        checkAllFilled();
+      }
+    });
+  }
+
+  if (btnVerify) {
+    btnVerify.addEventListener('click', submitOtpVerification);
+  }
+
+  if (btnResend) {
+    btnResend.addEventListener('click', () => {
+      if (btnResend.disabled) return;
+      requestOtpCode(currentRegisteredEmail, 'REGISTRATION', true);
+    });
+  }
+
+  function checkAllFilled() {
+    const code = inputs.map(i => i.value).join('');
+    if (code.length === 6) {
+      submitOtpVerification();
+    }
+  }
+}
+
+async function submitOtpVerification() {
+  const inputs = Array.from(document.querySelectorAll('.otp-input'));
+  const code = inputs.map(i => i.value.trim()).join('');
+  const btnVerify = document.getElementById('btn-verify-otp');
+
+  if (code.length < 6) {
+    showToast('Please enter the full 6-digit verification code.', 'error');
+    return;
+  }
+
+  if (btnVerify) {
+    btnVerify.disabled = true;
+    btnVerify.textContent = 'Verifying...';
+  }
+
+  try {
+    const res = await fetch(apiEndpoint('/api/verify-email/verify'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: currentRegisteredEmail,
+        code: code,
+        purpose: 'REGISTRATION'
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showToast('Email verified successfully! Logging you in...', 'success');
+      
+      // Complete login session
+      if (pendingSession && pendingSession.token) {
+        Auth.setSession(pendingSession.token, pendingSession);
+      }
+
+      setTimeout(() => {
+        const base = typeof getBasePath === 'function' ? getBasePath() : '';
+        const role = (pendingSession && pendingSession.role) ? pendingSession.role : currentRole;
+        if (role === 'recruiter') {
+          window.location.href = base + 'recruiter/dashboard.html';
+        } else {
+          window.location.href = base + 'applicant/dashboard.html';
+        }
+      }, 1000);
+
+    } else {
+      showToast(data.message || 'Invalid or expired code. Please try again.', 'error');
+      inputs.forEach(i => {
+        i.value = '';
+        i.classList.remove('filled');
+      });
+      if (inputs[0]) inputs[0].focus();
+    }
+  } catch (err) {
+    console.error('Verification error:', err);
+    showToast('Server error while verifying. Please try again.', 'error');
+  } finally {
+    if (btnVerify) {
+      btnVerify.disabled = false;
+      btnVerify.textContent = 'Verify & Continue';
+    }
+  }
+}
+
+function startResendCooldown(seconds) {
+  const btnResend = document.getElementById('btn-resend-otp');
+  const countdownEl = document.getElementById('resend-countdown');
+  const secondsEl = document.getElementById('resend-seconds');
+
+  if (!btnResend || !countdownEl || !secondsEl) return;
+
+  clearInterval(resendTimerInterval);
+  let remaining = seconds || 60;
+
+  btnResend.disabled = true;
+  btnResend.style.opacity = '0.5';
+  btnResend.style.cursor = 'not-allowed';
+  countdownEl.style.display = 'inline';
+  secondsEl.textContent = remaining;
+
+  resendTimerInterval = setInterval(() => {
+    remaining--;
+    secondsEl.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(resendTimerInterval);
+      btnResend.disabled = false;
+      btnResend.style.opacity = '1';
+      btnResend.style.cursor = 'pointer';
+      countdownEl.style.display = 'none';
+    }
+  }, 1000);
 }

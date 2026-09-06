@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Technical Interview Room — RecruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: #0b0f19;
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+    .room-header {
+      background: #111827;
+      border-bottom: 1px solid #1f2937;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .room-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .status-pill {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      color: #34d399;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .workspace-tabs {
+      display: flex;
+      background: #1e293b;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid #334155;
+    }
+    .workspace-tab {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #94a3b8;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .workspace-tab.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .workspace-body {
+      background: #1e293b;
+      border-radius: 0 0 8px 8px;
+      padding: 1.25rem;
+      min-height: 480px;
+    }
+    .rating-star {
+      font-size: 1.6rem;
+      cursor: pointer;
+      color: #475569;
+      transition: color 0.15s;
+    }
+    .rating-star.selected {
+      color: #f59e0b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="room-header">
+    <div class="room-brand">
+      <a id="btn-back-dashboard" href="index.html" class="btn btn-sm btn-secondary" style="background: #1f2937; border-color: #374151; color: #e5e7eb;">
+        &larr; Exit Room
+      </a>
+      <span style="opacity: 0.4;">|</span>
+      <div>
+        <h4 id="interview-title" style="margin: 0; font-size: 1rem; color: #fff;">Technical Interview Session</h4>
+        <span id="interview-participants" style="font-size: 0.82rem; color: #94a3b8;">Connecting participants...</span>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <div class="status-pill">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+        Live &bull; <span id="call-timer">00:00</span>
+      </div>
+      <div id="role-badge" class="badge" style="background: rgba(37,99,235,0.2); border: 1px solid #3b82f6; color: #93c5fd;">
+        Candidate View
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Room Layout -->
+  <main class="container-fluid" style="padding: 1.5rem; max-width: 1560px; margin: 0 auto;">
+    <div class="interview-room-grid">
+
+      <!-- LEFT: Video Stream & Media Controls -->
+      <section class="video-section">
+        <div class="video-screen-main">
+          <!-- Live User Video or High-Tech Avatar -->
+          <video id="user-webcam" autoplay playsinline muted></video>
+          <div id="avatar-fallback" style="display: none; text-align: center;">
+            <div style="width: 100px; height: 100px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1rem; box-shadow: 0 0 30px rgba(37,99,235,0.5);">
+              👨‍💻
+            </div>
+            <h4 id="fallback-participant-name" style="margin: 0; font-size: 1.25rem;">Candidate Video</h4>
+            <p style="font-size: 0.85rem; color: #94a3b8;">Microphone Active</p>
+          </div>
+
+          <!-- Video Badges -->
+          <div class="video-user-badge">
+            <span id="active-speaker-name">Live Candidate</span>
+            <div class="audio-bars">
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+            </div>
+          </div>
+
+          <!-- PiP Small Window -->
+          <div style="position: absolute; top: 1rem; right: 1rem; width: 150px; height: 95px; background: #1e293b; border: 2px solid #334155; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 0.75rem; color: #94a3b8;">Interviewer (AI HR)</span>
+          </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="video-controls-bar">
+          <button id="ctrl-mic" class="control-btn" title="Toggle Microphone">
+            🎙️
+          </button>
+          <button id="ctrl-cam" class="control-btn" title="Toggle Camera">
+            📹
+          </button>
+          <button id="ctrl-share" class="control-btn" title="Share Screen">
+            🖥️
+          </button>
+          <button id="ctrl-eval-toggle" class="control-btn" title="Scorecard" style="display: none;">
+            📝
+          </button>
+          <button id="ctrl-leave" class="control-btn btn-leave" title="End Call">
+            End Call
+          </button>
+        </div>
+      </section>
+
+      <!-- RIGHT: Interactive Technical & Evaluation Workspace -->
+      <section class="workspace-section">
+        <div class="workspace-tabs">
+          <div class="workspace-tab active" data-tab="scratchpad">💻 Code Scratchpad</div>
+          <div class="workspace-tab" id="tab-evaluator" data-tab="scorecard" style="display: none;">⭐ Recruiter Scorecard</div>
+          <div class="workspace-tab" data-tab="details">ℹ️ Session Info</div>
+        </div>
+
+        <div class="workspace-body">
+          <!-- TAB 1: Code Scratchpad -->
+          <div id="pane-scratchpad" class="tab-pane">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 0.85rem; color: #94a3b8;">Language:</label>
+                <select id="editor-lang" class="form-control" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; background: #0f172a; border-color: #334155; color: #f8fafc;">
+                  <option value="java">Java 21</option>
+                  <option value="javascript">JavaScript (ES6)</option>
+                  <option value="python">Python 3.13</option>
+                  <option value="sql">MySQL</option>
+                </select>
+              </div>
+              <button id="btn-run-code" class="btn btn-sm btn-primary" style="background: #10b981; border-color: #10b981;">
+                ▶ Run Code
+              </button>
+            </div>
+
+            <textarea id="code-editor" class="tech-editor-box" spellcheck="false">// Technical Interview Sandbox
+public class Solution {
+    public static void main(String[] args) {
+        System.out.println("Executing candidate solution...");
+        // Write your solution here
+    }
+}</textarea>
+
+            <div style="margin-top: 0.75rem;">
+              <span style="font-size: 0.78rem; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">Output Console</span>
+              <pre id="code-output" style="background: #0f172a; padding: 0.75rem; border-radius: 6px; border: 1px solid #334155; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #a5f3fc; min-height: 80px; margin-top: 0.25rem;">Console ready. Click 'Run Code' to execute.</pre>
+            </div>
+          </div>
+
+          <!-- TAB 2: Recruiter Scorecard & Candidate Assessment -->
+          <div id="pane-scorecard" class="tab-pane" style="display: none;">
+            <h4 style="color: #fff; font-size: 1.15rem; margin-bottom: 1rem;">Candidate Technical Assessment</h4>
+
+            <div class="form-group mb-3">
+              <label class="form-label" style="color: #cbd5e1;">Overall Rating</label>
+              <div id="star-rating" style="display: flex; gap: 0.4rem;">
+                <span class="rating-star selected" data-value="1">★</span>
+                <span class="rating-star selected" data-value="2">★</span>
+                <span class="rating-star selected" data-value="3">★</span>
+                <span class="rating-star selected" data-value="4">★</span>
+                <span class="rating-star selected" data-value="5">★</span>
+              </div>
+              <input type="hidden" id="eval-rating" value="5">
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label" style="color: #cbd5e1;">Technical & Cultural Evaluation Notes</label>
+              <textarea id="eval-feedback" class="form-control" rows="4" style="background: #0f172a; border-color: #334155; color: #f8fafc;" placeholder="Enter specific feedback on problem solving, communication, architecture, and code quality..."></textarea>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label" style="color: #cbd5e1;">Hiring Decision / Status Action</label>
+              <select id="eval-status-action" class="form-control" style="background: #0f172a; border-color: #334155; color: #f8fafc;">
+                <option value="Selected">🏆 Extend Offer / Selected</option>
+                <option value="Shortlisted">✨ Advance to Next Round</option>
+                <option value="Under Review">📋 Pending Review</option>
+                <option value="Rejected">🔴 Reject Candidate</option>
+              </select>
+            </div>
+
+            <button id="btn-submit-eval" class="btn btn-primary btn-block btn-lg" style="background: #3b82f6; font-weight: 600;">
+              Save Evaluation & Update Candidate Status
+            </button>
+          </div>
+
+          <!-- TAB 3: Session Details -->
+          <div id="pane-details" class="tab-pane" style="display: none;">
+            <h4 style="color: #fff; font-size: 1.15rem; margin-bottom: 1rem;">Session Overview</h4>
+            <div style="font-size: 0.9rem; line-height: 1.8; color: #cbd5e1;">
+              <div><strong>Job Title:</strong> <span id="det-job-title">-</span></div>
+              <div><strong>Company:</strong> <span id="det-company">-</span></div>
+              <div><strong>Applicant:</strong> <span id="det-applicant-name">-</span> (<span id="det-applicant-email">-</span>)</div>
+              <div><strong>Interview Date & Time:</strong> <span id="det-date-time">-</span></div>
+              <div><strong>Format:</strong> Virtual 1-on-1 Technical Round</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/interview-room.js"></script>
+</body>
+</html>

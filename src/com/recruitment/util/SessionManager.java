@@ -26,16 +26,22 @@ public class SessionManager {
         private final String role; // "applicant" or "recruiter"
         private Integer applicantId;
         private Integer recruiterId;
+        private Integer candidateId;
         private final long createdAt;
         private long lastAccessed;
 
         public UserSession(String token, int userId, String email, String role, Integer applicantId, Integer recruiterId) {
+            this(token, userId, email, role, applicantId, recruiterId, applicantId);
+        }
+
+        public UserSession(String token, int userId, String email, String role, Integer applicantId, Integer recruiterId, Integer candidateId) {
             this.token = token;
             this.userId = userId;
             this.email = email;
             this.role = role;
             this.applicantId = applicantId;
             this.recruiterId = recruiterId;
+            this.candidateId = candidateId != null ? candidateId : applicantId;
             this.createdAt = System.currentTimeMillis();
             this.lastAccessed = this.createdAt;
         }
@@ -46,14 +52,18 @@ public class SessionManager {
         public String getRole() { return role; }
         public Integer getApplicantId() { return applicantId; }
         public void setApplicantId(Integer applicantId) { this.applicantId = applicantId; }
+        public Integer getCandidateId() { return candidateId != null ? candidateId : applicantId; }
+        public void setCandidateId(Integer candidateId) { this.candidateId = candidateId; }
         public Integer getRecruiterId() { return recruiterId; }
         public void setRecruiterId(Integer recruiterId) { this.recruiterId = recruiterId; }
         public long getCreatedAt() { return createdAt; }
         public long getLastAccessed() { return lastAccessed; }
         public void touch() { this.lastAccessed = System.currentTimeMillis(); }
 
-        public boolean isApplicant() { return "applicant".equalsIgnoreCase(role); }
+        public boolean isApplicant() { return "applicant".equalsIgnoreCase(role) || "candidate".equalsIgnoreCase(role); }
+        public boolean isCandidate() { return "candidate".equalsIgnoreCase(role) || "applicant".equalsIgnoreCase(role); }
         public boolean isRecruiter() { return "recruiter".equalsIgnoreCase(role); }
+        public boolean isAdmin() { return "admin".equalsIgnoreCase(role); }
     }
 
     // In-memory concurrent registry of active sessions: Token -> UserSession
@@ -66,8 +76,12 @@ public class SessionManager {
      * Creates and registers a new session token for an authenticated user.
      */
     public static UserSession createSession(int userId, String email, String role, Integer applicantId, Integer recruiterId) {
+        return createSession(userId, email, role, applicantId, recruiterId, applicantId);
+    }
+
+    public static UserSession createSession(int userId, String email, String role, Integer applicantId, Integer recruiterId, Integer candidateId) {
         String token = UUID.randomUUID().toString().replace("-", "");
-        UserSession session = new UserSession(token, userId, email, role, applicantId, recruiterId);
+        UserSession session = new UserSession(token, userId, email, role, applicantId, recruiterId, candidateId);
         SESSIONS.put(token, session);
         return session;
     }

@@ -23,6 +23,8 @@
           <li><a href="../jobs.html">Find Jobs</a></li>
           <li><a href="dashboard.html" class="active">Dashboard</a></li>
           <li><a href="applications.html">My Applications</a></li>
+          <li><a href="assessments.html">Assessments</a></li>
+          <li><a href="career-path.html">Career Paths</a></li>
           <li><a href="interviews.html">Interviews</a></li>
         </ul>
         <div class="nav-actions">
@@ -40,6 +42,8 @@
         <li><a href="dashboard.html" class="active">📊 Overview Dashboard</a></li>
         <li><a href="profile.html">👤 Profile & Resume</a></li>
         <li><a href="applications.html">📝 My Applications</a></li>
+        <li><a href="assessments.html">🧠 Online Assessments</a></li>
+        <li><a href="career-path.html">🚀 Career Trajectory</a></li>
         <li><a href="interviews.html">📅 My Interviews</a></li>
         <li><a href="notifications.html">🔔 Notifications</a></li>
         <li><a href="../jobs.html">🔍 Search Jobs</a></li>
@@ -114,6 +118,32 @@
         </div>
       </div>
 
+      <!-- Smart Matched Vacancies (Core Innovation 1 & 2) -->
+      <div class="card mb-3">
+        <div class="card-header flex justify-between items-center" style="flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h3>⭐ Smart Matched Vacancies (5-Factor Formula)</h3>
+            <p class="text-muted" style="font-size: 0.85rem;">Ranked by algorithmic compatibility (Skills 45%, Exp 20%, Edu 10%, Projects 10%, Assessments 15%)</p>
+          </div>
+          <a href="../jobs.html" class="btn btn-outline btn-sm">Explore All Jobs</a>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Role &amp; Company</th>
+                <th>Compatibility Match</th>
+                <th>Location &amp; Type</th>
+                <th>Skill Gap Action</th>
+              </tr>
+            </thead>
+            <tbody id="recommended-matches-tbody">
+              <tr><td colspan="4" class="text-center text-muted">Calculating personalized recommendations...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Recent Notifications -->
       <div class="card">
         <div class="card-header">
@@ -127,6 +157,20 @@
     </main>
   </div>
 
+  <!-- Skill Gap Analyzer Modal -->
+  <div class="modal-overlay" id="skill-gap-modal">
+    <div class="modal-box" style="max-width: 860px;">
+      <div class="modal-header">
+        <div class="modal-title">🎯 Smart Skill Gap Audit &amp; Personalized Roadmap</div>
+        <button class="modal-close" onclick="closeModal('skill-gap-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="skill-gap-modal-content"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('skill-gap-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="container text-center">
       <p>&copy; 2026 RecruitHub — Core Java + JDBC Recruitment System</p>
@@ -134,6 +178,7 @@
   </footer>
 
   <script src="../js/common.js"></script>
+  <script src="../js/skill-gap.js"></script>
   <script src="../js/applicant.js"></script>
 </body>
 </html>

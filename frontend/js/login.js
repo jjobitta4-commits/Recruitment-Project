@@ -7,10 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // If already logged in, redirect to dashboard
   if (Auth.isLoggedIn()) {
+    const base = typeof getBasePath === 'function' ? getBasePath() : '';
     if (Auth.isApplicant()) {
-      window.location.href = '/applicant/dashboard.html';
+      window.location.href = base + 'applicant/dashboard.html';
     } else if (Auth.isRecruiter()) {
-      window.location.href = '/recruiter/dashboard.html';
+      window.location.href = base + 'recruiter/dashboard.html';
     }
   }
 
@@ -47,7 +48,8 @@ async function handleLogin(e) {
   }
 
   try {
-    const res = await fetch('/api/login', {
+    const apiUrl = (window.location.protocol === 'file:') ? 'http://localhost:8080/api/login' : '/api/login';
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -63,14 +65,17 @@ async function handleLogin(e) {
       const redirectUrl = params.get('redirect');
 
       setTimeout(() => {
+        const base = typeof getBasePath === 'function' ? getBasePath() : '';
         if (redirectUrl) {
           window.location.href = redirectUrl;
-        } else if (data.data.role.toLowerCase() === 'applicant') {
-          window.location.href = '/applicant/dashboard.html';
+        } else if (data.data.role.toLowerCase() === 'applicant' || data.data.role.toLowerCase() === 'candidate') {
+          window.location.href = base + 'applicant/dashboard.html';
         } else if (data.data.role.toLowerCase() === 'recruiter') {
-          window.location.href = '/recruiter/dashboard.html';
+          window.location.href = base + 'recruiter/dashboard.html';
+        } else if (data.data.role.toLowerCase() === 'admin') {
+          window.location.href = base + 'admin/dashboard.html';
         } else {
-          window.location.href = '/index.html';
+          window.location.href = base + 'index.html';
         }
       }, 700);
 
